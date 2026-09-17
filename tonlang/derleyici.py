@@ -20,6 +20,10 @@ from .surum import UZANTILAR
 
 ONEK = "$"
 
+# `ai = "groq"` gibi: hem degisken hem ayar olan adlar. Cekirdekte yorumlayici
+# degiskeni dogrudan okur; tarayicida derlenmis koddan calisma zamanina bildirilir.
+AYAR_ADLARI = {"ai"}
+
 IKILI_ISLER = {
     "+": "topla", "-": "cikar", "*": "carp", "/": "bol", "mod": "kalan", "^": "us",
     "==": "esit", "!=": "esit_degil", "<": "kucuk", ">": "buyuk",
@@ -266,7 +270,10 @@ class Derleyici:
                 kapsam.bildir(hedef.ad)
             if d.islec != "=":
                 deger = "T.%s(%s, %s)" % (IKILI_ISLER[d.islec[0]], ad, deger)
-            return "%s%s = %s;\n" % (bosluk, ad, deger)
+            satir = "%s%s = %s;\n" % (bosluk, ad, deger)
+            if hedef.ad in AYAR_ADLARI:
+                satir += "%sT.ayar(%s, %s);\n" % (bosluk, json.dumps(hedef.ad), ad)
+            return satir
         if isinstance(hedef, N.Dizin):
             nesne = self.ifade(hedef.nesne, kapsam)
             anahtar = self.ifade(hedef.anahtar, kapsam)
@@ -386,6 +393,11 @@ class Derleyici:
 
     def ad_coz(self, ad, kapsam, satir, degisken):
         if kapsam.var_mi(ad):
+            # Ayni ad hem degisken hem hazir is olabilir (`ai = "groq"` sonra
+            # `ai("...")`). Cekirdekteki kural: deger cagrilabilir degilse
+            # hazir ise dusulur.
+            if ad in self.hazir and not degisken:
+                return "T.golge(%s, %s)" % (ONEK + ad, json.dumps(ad))
             return ONEK + ad
         if ad in self.hazir:
             return "T.h(%s)" % json.dumps(ad)

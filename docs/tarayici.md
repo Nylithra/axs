@@ -166,8 +166,15 @@ Bunları tarayıcı kodunda kullanırsan **derlerken** anlaşılır bir hata al�
 tarayıcıya inmesin diye:
 
 ```ton
-# sunucu tarafi
-web.ai_ucu("/api/ai")      # ai() burayi kullanir, anahtar sunucuda kalir
+# sunucu tarafı
+ai_setup(saglayici: "groq", key: "gsk_...")
+web.ai_ucu("/api/ai")      # anahtar sunucuda kalır
+```
+
+```ton
+# tarayıcı tarafı
+ai = "groq"                # sağlayıcı seçimi sunucuya iletilir
+cevap = ai("merhaba")
 ```
 
 ## İki küçük davranış farkı

@@ -147,8 +147,19 @@ Veritabanı bağlantısı: `.run(sql, degerler)` `.all(sql)` `.one(sql)` `.table
 
 ## Yapay zekâ
 
-`ai(soru)` · `ai_setup(key:, model:, url:, kisilik:)` · `ai_json(soru)` ·
-`ai_chat(gecmis, soru)` · `ai_ready()`
+Sağlayıcı seçmek tek satır: `ai = "groq"`
+(`claude` · `chatgpt` · `gemini` · `grok` · `groq`)
+
+| İş | Ne yapar |
+|---|---|
+| `ai(soru, model:, kisilik:, sinir:, saglayici:)` | Sorar |
+| `ai_json(soru)` | Cevabı harita/liste olarak ister |
+| `ai_chat(gecmis, soru)` | `{cevap, gecmis}` |
+| `ai_setup(key:, model:, url:, kisilik:, sinir:, saglayici:)` | Ayarlar |
+| `ai_ready()` · `ai_ayar()` · `ai_saglayicilar()` | Durum |
+| `ai_modeller()` | Sağlayıcının canlı model listesi |
+
+Ayrıntılar: [zeka.md](zeka.md)
 
 ## Üstprogramlama
 

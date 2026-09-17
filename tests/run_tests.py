@@ -153,7 +153,34 @@ def tarayici_testleri():
     else:
         kalan.append(("isler.json", "ton.js ile ayni", "farkli - yeniden uret"))
 
-    # 2) test dosyalari ayni ciktiyi veriyor mu?
+    # 2) tarayiciya ozgu davranislar
+    from tonlang.derleyici import derle as tarayiciya_derle
+
+    kucuk_testler = [
+        # `ai = "groq"` hem degisken hem ayar
+        ('ai = "groq"\nprint: %ai% %(ai_ayar().saglayici)%', "groq groq"),
+        ('ai = "openai"\nprint: %(ai_ayar().saglayici)%', "chatgpt"),
+        # hazir isi golgeleyen degisken: cagri yine hazir ise gider
+        ('len = 5\nprint: %len% %(len("abc"))%', "5 3"),
+        # cagrilabilir deger golgeleyebilir
+        ('func len(x) -> 99\nprint: %(len("abc"))%', "99"),
+    ]
+    for kaynak, beklenen in kucuk_testler:
+        try:
+            kod = tarayiciya_derle(kaynak, "<tarayici-test>")
+        except TonError as e:
+            kalan.append((kaynak, beklenen, e.rapor()))
+            continue
+        p2 = subprocess.run(
+            [node, "-e", "require(%s); %s" % (json.dumps(calisma_zamani), kod)],
+            capture_output=True, text=True, timeout=60)
+        bulunan = (p2.stdout + p2.stderr).strip()
+        if bulunan == beklenen:
+            gecen += 1
+        else:
+            kalan.append((kaynak, beklenen, bulunan))
+
+    # 3) test dosyalari ayni ciktiyi veriyor mu?
     gecici = tempfile.mkdtemp(prefix="ton-js-")
     try:
         for ad in TARAYICI_DURUMLARI:

@@ -270,6 +270,20 @@
     return await hedef.apply(null, args);
   };
 
+  T.ayarlar = {};
+
+  T.ayar = function (ad, deger) {
+    T.ayarlar[ad] = deger;
+    return deger;
+  };
+
+  T.golge = function (deger, ad) {
+    /* Ayni ad hem degisken hem hazir is olabilir: `ai = "groq"` yazip sonra
+       `ai("...")` cagirmak gibi. Deger cagrilabilir degilse hazir ise dusulur. */
+    if (typeof deger === "function") return deger;
+    return T.h(ad);
+  };
+
   T.gezinti = function (kaynak) {
     if (Array.isArray(kaynak)) return kaynak;
     if (typeof kaynak === "string") return kaynak.split("");
@@ -973,22 +987,53 @@
          });
 
   // ------------------------------------------------------------------ yapay zeka
-  kaydet(["ai_setup", "zeka_ayarla"], ["url", "kisilik", "model"],
-         function (url, kisilik, model) {
+  /* Tarayicida anahtar tutulmaz: istek kendi sunucuna gider, anahtar orada
+     kalir. Sunucu tarafinda: web.ai_ucu("/api/ai") */
+  var AI_SAGLAYICILAR = ["claude", "chatgpt", "gemini", "grok", "groq"];
+  var AI_TAKMA = { anthropic: "claude", openai: "chatgpt", gpt: "chatgpt",
+                   google: "gemini", xai: "grok" };
+
+  function ai_saglayici(secilen) {
+    var ad = m(secilen || T.ayarlar.ai || "").trim().toLowerCase();
+    if (!ad) return null;
+    ad = AI_TAKMA[ad] || ad;
+    if (AI_SAGLAYICILAR.indexOf(ad) < 0) {
+      throw TonHata("'" + ad + "' diye bir yapay zeka saglayicisi yok. Secenekler: " +
+                    AI_SAGLAYICILAR.join(", "));
+    }
+    return ad;
+  }
+
+  kaydet(["ai_setup", "zeka_ayarla"], ["url", "kisilik", "model", "saglayici"],
+         function (url, kisilik, model, saglayici) {
            if (url) T.ai_adres = m(url);
            if (kisilik) T.ai_kisilik = m(kisilik);
            if (model) T.ai_model = m(model);
+           if (saglayici) T.ayar("ai", ai_saglayici(saglayici));
            return true;
          });
   kaydet(["ai_ready", "zeka_hazir"], [], function () { return !!T.ai_adres; });
-  kaydet(["ai", "zeka", "sorbana"], ["soru", "model", "kisilik"],
-         async function (soru, model, kisilik) {
+  kaydet(["ai_providers", "ai_saglayicilar", "zeka_saglayicilar"], [], function () {
+    return AI_SAGLAYICILAR.map(function (ad) {
+      return { ad: ad, secili: ad === ai_saglayici() };
+    });
+  });
+  kaydet(["ai_info", "ai_ayar", "zeka_ayar"], [], function () {
+    return { saglayici: ai_saglayici() || "sunucu", adres: T.ai_adres,
+             model: T.ai_model || null, nerede: "tarayici" };
+  });
+  kaydet(["ai", "zeka", "sorbana"], ["soru", "model", "kisilik", "saglayici"],
+         async function (soru, model, kisilik, saglayici) {
            var govde = { soru: T.metin(soru) };
+           var secilen = ai_saglayici(saglayici);
+           if (secilen) govde.saglayici = secilen;
            if (model || T.ai_model) govde.model = m(model || T.ai_model);
            if (kisilik || T.ai_kisilik) govde.kisilik = m(kisilik || T.ai_kisilik);
            var c = await istek("POST", T.ai_adres, govde);
            if (!c.basarili) {
-             throw TonHata("Yapay zeka hatasi (" + c.durum + "): " + T.metin(c.veri));
+             var ayrinti = c.veri;
+             if (harita_mi(ayrinti)) ayrinti = ayrinti.hata || ayrinti.error || ayrinti;
+             throw TonHata("Yapay zeka hatasi (" + c.durum + "): " + T.metin(ayrinti));
            }
            if (harita_mi(c.veri)) return T.metin(c.veri.cevap || c.veri.metin || c.veri);
            return T.metin(c.veri);

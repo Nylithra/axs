@@ -6,6 +6,8 @@ from .lexer import anahtar, coz
 
 BITIRICILER = {"end", "else", "elif", "catch"}
 
+ISLEC_KELIMELERI = {"and", "or", "not", "mod", "in", "func"}
+
 KARSILASTIRMA = {"==", "!=", "<", ">", "<=", ">="}
 TOPLAMA = {"+", "-"}
 CARPMA = {"*", "/"}
@@ -67,6 +69,17 @@ class Parser:
             raise self.hata("'%s' bekleniyordu, %s bulundu" % (kelimeler[0], _goster(self.bak())))
         return k
 
+    def blok_bitti(self):
+        """Blok burada bitiyor mu?
+
+        `son = 5` gibi bir satir blok bitisi degil, atamadir: anahtar kelimeye
+        benzeyen adlar da degisken olabilir."""
+        if not self.kelime(*BITIRICILER):
+            return False
+        if self.bak(1).kind == "OP" and self.bak(1).value in ATAMA:
+            return False
+        return True
+
     def satir_sonu(self):
         """Deyim sonu: satir sonu, dosya sonu ya da bir blok bitirici."""
         if self.yut("NL"):
@@ -94,7 +107,7 @@ class Parser:
         """Bir blogun govdesini, bitirici kelimeye kadar okur."""
         cikti = []
         self.bosluklari_gec()
-        while not self.esit("EOF") and not self.kelime(*BITIRICILER):
+        while not self.esit("EOF") and not self.blok_bitti():
             cikti.append(self.deyim())
             self.bosluklari_gec()
         return cikti
@@ -391,11 +404,13 @@ class Parser:
             return self._degisken(t)
         if t.kind == "NAME":
             k = anahtar(t.value)
+            # `son(1)`, `yok(2)` gibi: ardindan `(` geliyorsa bu bir is adidir.
+            # Islec gibi davranan kelimeler haric: `not (%a%)` bir cagri degildir.
+            if k not in ISLEC_KELIMELERI and self.bak(1).kind == "OP" \
+                    and self.bak(1).value == "(":
+                self.al()
+                return N.Ad(t.value, line=t.line)
             if k in ("true", "false", "null"):
-                # `yok(1)` gibi: hemen ardindan `(` geliyorsa bu bir is adidir
-                if self.bak(1).kind == "OP" and self.bak(1).value == "(":
-                    self.al()
-                    return N.Ad(t.value, line=t.line)
                 self.al()
                 return N.Sabit({"true": True, "false": False}.get(k), line=t.line)
             if k == "func":

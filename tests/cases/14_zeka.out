@@ -1,0 +1,12 @@
+TON web sunucusu hazir -> http://localhost:8134  (durdurmak icin Ctrl-C)
+anthropic model=claude-opus-5 sinir=256 sistem=kisa konus soru=selam
+openai model=gpt-5.5 alanlar=model|messages|max_completion_tokens roller=system,user son=selam
+openai model=grok-ozel alanlar=model|messages|max_tokens roller=system,user son=selam
+openai model=openai/gpt-oss-120b alanlar=model|messages|max_tokens roller=system,user son=selam
+gemini yol=gemini-3.8-flash:generateContent sinir=256 rol=user soru=selam sistem=kisa konus
+anthropic model=claude-opus-5 sinir=256 sistem=kisa konus soru=selam
+hala gemini
+2 mesaj
+Groq anahtarin kabul edilmedi (401). GROQ_API_KEY ortam degiskenini ya da ai_setup(key: "...") degerini kontrol et. Ayrinti: invalid api key
+'openai/gpt-oss-120b' modeli Groq icin gecerli degil. Gecerli modelleri gormek icin ai_modeller() yaz, sonra ai_setup(model: "...") ile sec. Ayrinti: The model `abc` does not exist
+'bilinmeyen' diye bir yapay zeka saglayicisi yok. Secenekler: claude, chatgpt, gemini, grok, groq

@@ -195,14 +195,28 @@ print: %(%v%.top(5, "tutar"))%
 
 ### Yapay zekâ — `ai()`
 
+Beş sağlayıcı, tek satırla seçilir:
+
 ```ton
-ai_setup(key: "...")          # ya da TON_AI_KEY ortam değişkeni
+ai = "groq"        # claude · chatgpt · gemini · grok · groq
 
 print: %(ai("Bana bir fıkra anlat"))%
 
 veri = ai_json("3 şehir ismini {sehirler: [...]} biçiminde ver")
 print: %veri.sehirler%
 ```
+
+Anahtar ortam değişkeninden gelir (`GROQ_API_KEY`, `OPENAI_API_KEY`, ...) ya da
+`ai_setup(key: "...")` ile verilir. Her sağlayıcının anahtarı ayrı tutulur,
+aralarında geçiş yapmak tek satır.
+
+```ton
+print: %(ai_saglayicilar())%     # beşinin durumu
+print: %(ai_modeller())%         # sağlayıcının canlı model listesi
+ai("soru", saglayici: "grok")    # sadece bu çağrı için
+```
+
+Ayrıntılar: [docs/zeka.md](docs/zeka.md)
 
 ### Üstprogramlama — `meta()`
 
@@ -332,6 +346,7 @@ tests/            # test takımı
 - [docs/isler.md](docs/isler.md) — bütün hazır işler
 - [docs/tonweb.md](docs/tonweb.md) — web kütüphanesi
 - [docs/tarayici.md](docs/tarayici.md) — tarayıcıda TON
+- [docs/zeka.md](docs/zeka.md) — yapay zekâ sağlayıcıları
 
 ## Windows notları
 

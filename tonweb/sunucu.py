@@ -422,7 +422,9 @@ def yukle(y):
                 return Cevap(b'{"hata":"soru bos"}', 400,
                              "application/json; charset=utf-8")
             try:
-                cevap = zeka(soru, model=veri.get("model"), kisilik=veri.get("kisilik"))
+                cevap = zeka(y, soru, model=veri.get("model"),
+                             kisilik=veri.get("kisilik"),
+                             saglayici=veri.get("saglayici"))
             except TonError as e:
                 return json_cevap({"hata": e.mesaj}, 500)
             return json_cevap({"cevap": cevap})
