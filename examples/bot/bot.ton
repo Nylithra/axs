@@ -3,9 +3,13 @@
 #
 #  1. examples/bot/.env dosyasi olustur:
 #         JUBB_TOKEN=bot_tokenin
+#         JUBB_SUNUCU=sunucu_kimligin      (slash komutlari icin)
 #  2. Calistir:
 #         ton examples/bot/bot.ton
 #  3. Durdurmak icin Ctrl-C
+#
+#  Bot hem yazili komutlara (!selam) hem slash komutlarina (/selam) cevap verir.
+#  Slash komutlari acilista kendiliginden kaydedilir.
 # ============================================================
 
 use jubb
@@ -16,17 +20,20 @@ token = env("JUBB_TOKEN")
 if %token% == ""
   print: Token bulunamadi.
   print:
-  print: examples/bot/.env dosyasi olustur ve icine su satiri yaz:
+  print: examples/bot/.env dosyasi olustur, icine su satirlari yaz:
   print:   JUBB_TOKEN=bot_tokenin
+  print:   JUBB_SUNUCU=sunucu_kimligin
   print:
-  print: (ornek icin .env.ornek dosyasina bakabilirsin)
+  print: (ornek icin .env.ornek dosyasina bak)
   exit(1)
 end
 
-jubb.giris(%token%, env("JUBB_UYGULAMA"))
-jubb.ag_ayarla(kayit: true)          # baglanti adimlarini ekrana yaz
+SUNUCU = env("JUBB_SUNUCU")
 
-# --- kendi adresin varsa (test sunucusu vb.) ---
+jubb.giris(%token%, env("JUBB_UYGULAMA"))
+jubb.ag_ayarla(kayit: true)
+
+# Kendi sunucuna/gateway'ine baglanmak istersen
 if env("JUBB_TEMEL") != ""
   jubb.ayarla(temel: env("JUBB_TEMEL"))
 end
@@ -35,24 +42,118 @@ if env("JUBB_GATEWAY") != ""
 end
 
 # ============================================================
+#  Slash komutlarinin tanimi
+# ============================================================
+
+KOMUTLAR = [
+  jubb.komut("selam", "Selam verir"),
+  jubb.komut("zar", "Zar atar", [
+    {ad: "yuz", aciklama: "Kac yuzlu zar (varsayilan 6)", tur: "sayi"}
+  ]),
+  jubb.komut("topla", "Iki sayiyi toplar", [
+    {ad: "bir", aciklama: "Birinci sayi", tur: "sayi", zorunlu: true},
+    {ad: "iki", aciklama: "Ikinci sayi", tur: "sayi", zorunlu: true}
+  ]),
+  jubb.komut("yanki", "Yazdigini geri soyler", [
+    {ad: "metin", aciklama: "Soylenecek yazi", tur: "metin", zorunlu: true}
+  ]),
+  jubb.komut("bilgi", "Bot hakkinda bilgi"),
+  jubb.komut("gizli", "Sadece sana gorunen bir cevap")
+]
+
+func komutlari_kaydet()
+  if %_ayar_yok% == true
+    return null
+  end
+  try
+    if %SUNUCU% != ""
+      jubb.komutlari_ayarla(%KOMUTLAR%, %SUNUCU%)
+      print: %(len(%KOMUTLAR%))% slash komutu bu sunucuya kaydedildi
+    else
+      jubb.komutlari_ayarla(%KOMUTLAR%)
+      print: %(len(%KOMUTLAR%))% slash komutu genel olarak kaydedildi
+      print: (genel komutlarin gorunmesi biraz surebilir; hemen gormek icin
+      print:  .env icine JUBB_SUNUCU=sunucu_kimligin yaz)
+    end
+  catch mesaj
+    print: Komutlar kaydedilemedi: %mesaj%
+    print: (bot yine de calisiyor; yazili komutlari deneyebilirsin)
+  end
+  return null
+end
+
+_ayar_yok = false
+
+# ============================================================
 #  Olaylar
 # ============================================================
 
 func hazir(veri)
   print:
   print: ===========================================
-  print:  %veri.user.username% baglandi!
-  print:  Komutlar: %ONEK%selam  %ONEK%zar  %ONEK%ping  %ONEK%sunucu  %ONEK%yardim
+  print:  %veri.user.username% baglandi
   print: ===========================================
+  if jubb.ayar().uygulama == ""
+    print: Uygulama kimligi gelmedi; slash komutlari kaydedilemiyor.
+    print: .env icine JUBB_UYGULAMA=uygulama_kimligin yazabilirsin.
+    _ayar_yok = true
+  end
+  komutlari_kaydet()
+  print:
+  print: Yazili komutlar: %ONEK%selam %ONEK%zar %ONEK%topla %ONEK%yardim
+  print: Slash komutlari : /selam /zar /topla /yanki /bilgi /gizli
   print:
 end
 
+# ---------- slash komutlari ----------
+func slash_geldi(e)
+  ad = jubb.komut_adi(%e%)
+  kisi = jubb.kim(%e%)
+  print: [/%ad%] <- %(al(%kisi%, "username", "?"))%
+
+  if %ad% == "selam"
+    jubb.cevapla(%e%, "Selam " + jubb.bahset(al(%kisi%, "id", 0)) + "! Ben TON ile yazildim.")
+
+  elif %ad% == "zar"
+    yuz = jubb.secenek(%e%, "yuz", 6)
+    if %yuz% < 2
+      jubb.cevapla(%e%, "Zarin en az 2 yuzu olmali.", gizli: true)
+      return null
+    end
+    jubb.cevapla(%e%, "%yuz% yuzlu zar: **" + random(1, %yuz%) + "**")
+
+  elif %ad% == "topla"
+    bir = number(jubb.secenek(%e%, "bir", 0), 0)
+    iki = number(jubb.secenek(%e%, "iki", 0), 0)
+    jubb.cevapla(%e%, %bir% + " + " + %iki% + " = **" + (%bir% + %iki%) + "**")
+
+  elif %ad% == "yanki"
+    jubb.cevapla(%e%, jubb.secenek(%e%, "metin", ""))
+
+  elif %ad% == "bilgi"
+    jubb.cevapla(%e%, {
+      baslik: "TON Botu",
+      aciklama: "Bu bot TON dili ile yazildi.\n"
+              + "Kutuphane: jubb (o da TON ile yazildi)\n"
+              + "Komut sayisi: " + len(%KOMUTLAR%),
+      renk: "#2f6fed",
+      alt_yazi: "ton " + "examples/bot/bot.ton"
+    })
+
+  elif %ad% == "gizli"
+    jubb.cevapla(%e%, "Bu mesaji sadece sen goruyorsun.", gizli: true)
+
+  else
+    jubb.cevapla(%e%, "Bu komutu bilmiyorum: /" + %ad%, gizli: true)
+  end
+  return null
+end
+
+# ---------- yazili komutlar ----------
 func mesaj_geldi(m)
-  # Kendi mesajlarimiza cevap vermeyelim, yoksa sonsuz donguye gireriz
   if %m.kendim%
     return null
   end
-
   icerik = trim(al(%m%, "content", ""))
   if not starts(%icerik%, %ONEK%)
     return null
@@ -68,21 +169,13 @@ func mesaj_geldi(m)
   sunucu = al(%m%, "guild_id", null)
   kanal = al(%m%, "channel_id", null)
   yazar = al(%m%, "author", {})
-
-  print: [komut] %komut% <- %(al(%yazar%, "username", "?"))%
+  print: [%ONEK%%komut%] <- %(al(%yazar%, "username", "?"))%
 
   if %komut% == "selam"
-    jubb.yolla(%sunucu%, %kanal%, "Selam " + jubb.bahset(%yazar.id%) + "! Ben TON ile yazildim.")
+    jubb.yolla(%sunucu%, %kanal%, "Selam " + jubb.bahset(al(%yazar%, "id", 0)) + "!")
 
   elif %komut% == "zar"
-    sayi = random(1, 6)
-    jubb.yolla(%sunucu%, %kanal%, "Zar: **" + %sayi% + "**")
-
-  elif %komut% == "ping"
-    basla = zaman()
-    jubb.yolla(%sunucu%, %kanal%, "Pong!")
-    gecen = round((zaman() - %basla%) * 1000)
-    print:   (istek %gecen% ms surdu)
+    jubb.yolla(%sunucu%, %kanal%, "Zar: **" + random(1, 6) + "**")
 
   elif %komut% == "topla"
     toplam = 0
@@ -91,42 +184,14 @@ func mesaj_geldi(m)
     end
     jubb.yolla(%sunucu%, %kanal%, %kalan% + " = **" + %toplam% + "**")
 
-  elif %komut% == "sunucu"
-    bilgi = jubb.sunucu(%sunucu%)
-    kanallar = jubb.kanallar(%sunucu%)
-    jubb.yolla(%sunucu%, %kanal%, {
-      baslik: al(%bilgi%, "name", "Sunucu"),
-      aciklama: "Kanal sayisi: " + len(%kanallar%),
-      renk: "#2f6fed",
-      alt_yazi: "TON botu"
-    })
-
   elif %komut% == "yardim"
     jubb.yolla(%sunucu%, %kanal%, {
       baslik: "Komutlar",
-      aciklama: %ONEK% + "selam - selam verir\n"
-              + %ONEK% + "zar - zar atar\n"
-              + %ONEK% + "ping - yasiyor mu bakar\n"
-              + %ONEK% + "topla 1 2 3 - toplar\n"
-              + %ONEK% + "sunucu - sunucu bilgisi\n"
-              + %ONEK% + "yardim - bu yazi",
+      aciklama: "Yazili: " + %ONEK% + "selam  " + %ONEK% + "zar  "
+              + %ONEK% + "topla 1 2 3  " + %ONEK% + "yardim\n"
+              + "Slash: /selam  /zar  /topla  /yanki  /bilgi  /gizli",
       renk: "#2f6fed"
     })
-  end
-  return null
-end
-
-func komut_geldi(etkilesim)
-  veri = al(%etkilesim%, "data", {})
-  ad = al(%veri%, "name", "")
-  print: [slash] /%ad%
-
-  if %ad% == "selam"
-    jubb.cevapla(%etkilesim%, "Selam!")
-  elif %ad% == "zar"
-    jubb.cevapla(%etkilesim%, "Zar: **" + random(1, 6) + "**")
-  else
-    jubb.cevapla(%etkilesim%, "Bu komutu bilmiyorum", gizli: true)
   end
   return null
 end
@@ -145,8 +210,8 @@ end
 # ============================================================
 
 jubb.dinle("hazir", hazir)
+jubb.dinle("komut", slash_geldi)
 jubb.dinle("mesaj", mesaj_geldi)
-jubb.dinle("komut", komut_geldi)
 jubb.dinle("uye_katildi", uye_katildi)
 jubb.dinle("hata", baglanti_hatasi)
 

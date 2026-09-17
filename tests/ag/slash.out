@@ -1,0 +1,13 @@
+HAZIR: ton_bot / uygulama UYG1
+3 komut kaydedildi
+/selam <- nyl
+/topla <- nyl
+/yanki <- nyl
+/olmayan <- nyl
+bot duruyor
+bitti
+REST PUT /api/applications/UYG1/guilds/7/commands [{"name":"selam","description":"Selam verir","type":1},{"name":"topla","description":"Toplar","type":1,"options":[{"name":"bir","description":"Birinci","type":4,"required":true},{"name":"iki","description":"Ikinci","type":4,"required":true}]},{"name":"yanki","description":"Geri soyler","type":1,"options":[{"name":"metin","description":"Yazi","type":3,"required":true}]}]
+REST POST /api/interactions/500/TKN0/callback {"type":4,"data":{"content":"Selam <@42>!"}}
+REST POST /api/interactions/501/TKN1/callback {"type":4,"data":{"content":"15 + 27 = 42"}}
+REST POST /api/interactions/502/TKN2/callback {"type":4,"data":{"embeds":[{"title":"Yanki","description":"merhaba TON","color":3108845}]}}
+REST POST /api/interactions/503/TKN3/callback {"type":4,"data":{"content":"bilmiyorum","flags":64}}

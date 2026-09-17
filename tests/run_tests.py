@@ -264,8 +264,20 @@ AG_KUTUSU = os.path.join(KOK, "tests", "ag")
 MESAJLAR = {
     "bot.ton": ["!selam", "!topla 10 20 12", "!kutu", "merhaba", "!dur"],
     "soket.tarayici.ton": ["!merhaba"],
+    "slash.ton": [],
 }
-REST_KAYDI = {"bot.ton"}
+# Sahte gateway'in yollayacagi slash etkilesimleri
+KOMUTLAR = {
+    "slash.ton": [
+        {"name": "selam"},
+        {"name": "topla", "options": [{"name": "bir", "type": 4, "value": 15},
+                                      {"name": "iki", "type": 4, "value": 27}]},
+        {"name": "yanki", "options": [{"name": "metin", "type": 3,
+                                       "value": "merhaba TON"}]},
+        {"name": "olmayan"},
+    ],
+}
+REST_KAYDI = {"bot.ton", "slash.ton"}
 
 
 def ag_testleri():
@@ -289,8 +301,10 @@ def ag_testleri():
         rest_port = port + 1
         mesajlar = MESAJLAR.get(ad)
         sunucu_cevresi = dict(os.environ)
-        if mesajlar:
+        if mesajlar is not None:
             sunucu_cevresi["SAHTE_MESAJLAR"] = json.dumps(mesajlar)
+        if ad in KOMUTLAR:
+            sunucu_cevresi["SAHTE_KOMUTLAR"] = json.dumps(KOMUTLAR[ad])
         sunucu = subprocess.Popen([sys.executable, sunucu_yolu, str(port)],
                                   stdout=subprocess.PIPE, text=True,
                                   env=sunucu_cevresi)

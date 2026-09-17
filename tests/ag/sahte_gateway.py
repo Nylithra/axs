@@ -89,7 +89,8 @@ def oturum(baglanti, kayit):
             cerceve_yaz(baglanti, json.dumps({
                 "op": 0, "s": 1, "t": "READY",
                 "d": {"session_id": "OTURUM1",
-                      "user": {"id": 1, "username": "ton_bot"}}}))
+                      "user": {"id": 1, "username": "ton_bot"},
+                      "application": {"id": os.environ.get("SAHTE_UYGULAMA", "UYG1")}}}))
             # tek cercevede birden cok olay: sunucunun yaptigi gibi
             icerikler = json.loads(os.environ.get("SAHTE_MESAJLAR", '["!selam", "!zar"]'))
             paketler = []
@@ -101,6 +102,14 @@ def oturum(baglanti, kayit):
                           "author": {"id": 42, "username": "nyl", "bot": False}}}))
             if paketler:
                 cerceve_yaz(baglanti, "\n".join(paketler))
+            # slash komutu etkilesimleri
+            for i, ham in enumerate(json.loads(os.environ.get("SAHTE_KOMUTLAR", "[]"))):
+                cerceve_yaz(baglanti, json.dumps({
+                    "op": 0, "s": 50 + i, "t": "INTERACTION_CREATE",
+                    "d": {"id": 500 + i, "token": "TKN%d" % i, "type": 2,
+                          "guild_id": 7, "channel_id": 9,
+                          "member": {"user": {"id": 42, "username": "nyl"}},
+                          "data": ham}}))
             cerceve_yaz(baglanti, json.dumps({
                 "op": 0, "s": 4, "t": "GUILD_MEMBER_ADD",
                 "d": {"guild_id": 7, "user": {"id": 43, "username": "yeni"}}}))

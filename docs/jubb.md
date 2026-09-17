@@ -97,6 +97,52 @@ jubb.komutlar(%sunucu%)
 jubb.komut_sil(%komut%, %sunucu%)
 ```
 
+## Slash komutları
+
+Komutu tanımla, kaydet, gelen etkileşimi yanıtla:
+
+```ton
+KOMUTLAR = [
+  jubb.komut("selam", "Selam verir"),
+  jubb.komut("zar", "Zar atar", [
+    {ad: "yuz", aciklama: "Kac yuzlu", tur: "sayi"}
+  ]),
+  jubb.komut("yanki", "Geri soyler", [
+    {ad: "metin", aciklama: "Yazi", tur: "metin", zorunlu: true}
+  ])
+]
+
+func hazir(veri)
+  jubb.komutlari_ayarla(%KOMUTLAR%, %SUNUCU%)   # sunucuya özel: anında görünür
+end
+
+func slash_geldi(e)
+  ad = jubb.komut_adi(%e%)
+  kisi = jubb.kim(%e%)
+
+  if %ad% == "zar"
+    yuz = jubb.secenek(%e%, "yuz", 6)
+    jubb.cevapla(%e%, "Zar: " + random(1, %yuz%))
+  end
+end
+
+jubb.dinle("hazir", hazir)
+jubb.dinle("komut", slash_geldi)
+```
+
+| İş | Ne yapar |
+|---|---|
+| `jubb.komut(ad, aciklama, secenekler)` | Komut tanımı üretir |
+| `jubb.komut_adi(%e%)` | Hangi komut çağrıldı |
+| `jubb.secenek(%e%, ad, varsayilan)` | Komuta verilen değeri okur |
+| `jubb.kim(%e%)` | Komutu yazan kullanıcı |
+
+Seçenek türleri: `metin` `sayi` `mantik` `kullanici` `kanal` `rol` `ondalik`
+(`zorunlu: true` ile zorunlu yapılır).
+
+Uygulama kimliği bağlantı sırasında (READY) kendiliğinden gelir; gelmezse
+`jubb.giris(token, uygulama_kimligi)` ile verirsin.
+
 ## Etkileşime cevap
 
 ```ton

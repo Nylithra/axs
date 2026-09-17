@@ -328,6 +328,72 @@ func komut_sil(komut, sunucu = "")
   return _istek("DELETE", _uygulama_yolu(%sunucu%) + "/" + %komut%)
 end
 
+# ---------------------------------------------------------------- slash komutlari
+_SECENEK_TURLERI = {
+  metin: 3,
+  yazi: 3,
+  sayi: 4,
+  tam: 4,
+  mantik: 5,
+  kullanici: 6,
+  kanal: 7,
+  rol: 8,
+  ondalik: 10
+}
+
+# Slash komutu tanimi uretir.
+#   jubb.komut("zar", "Zar atar", [{ad: "yuz", aciklama: "Kac yuzlu", tur: "sayi"}])
+func komut(ad, aciklama, secenekler = null)
+  tanim = {name: %ad%, description: %aciklama%, type: 1}
+  if %secenekler% != null
+    liste = []
+    for s in %secenekler%
+      tur_adi = al(%s%, "tur", "metin")
+      tur_no = al(%_SECENEK_TURLERI%, %tur_adi%, 0)
+      if %tur_no% == 0
+        hata("Bilinmeyen secenek turu: " + %tur_adi% + " - secenekler: "
+             + join(keys(%_SECENEK_TURLERI%), ", "))
+      end
+      ekle(%liste%, {
+        name: %s.ad%,
+        description: al(%s%, "aciklama", %s.ad%),
+        type: %tur_no%,
+        required: al(%s%, "zorunlu", false)
+      })
+    end
+    %tanim%.options = %liste%
+  end
+  return %tanim%
+end
+
+# Etkilesimden komut adini alir
+func komut_adi(etkilesim)
+  return al(al(%etkilesim%, "data", {}), "name", "")
+end
+
+# Komuta verilen secenegi okur:  jubb.secenek(%e%, "yuz", 6)
+func secenek(etkilesim, ad, varsayilan = null)
+  veri = al(%etkilesim%, "data", {})
+  for s in al(%veri%, "options", [])
+    if al(%s%, "name", "") == %ad%
+      return al(%s%, "value", %varsayilan%)
+    end
+  end
+  return %varsayilan%
+end
+
+# Komutu kimin yazdigi
+func kim(etkilesim)
+  uye = al(%etkilesim%, "member", null)
+  if %uye% != null
+    kullanici = al(%uye%, "user", null)
+    if %kullanici% != null
+      return %kullanici%
+    end
+  end
+  return al(%etkilesim%, "user", {})
+end
+
 # ---------------------------------------------------------------- etkilesim
 # Slash komutuna cevap verir.
 func cevapla(etkilesim, icerik, gizli = false)
