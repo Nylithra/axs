@@ -1,0 +1,21 @@
+// sayilar, metinler, sablonlar
+let a = 5;
+const b = 3;
+var c = a + b;
+console.log(a + b, a - b, a * b, a / b, a % b, a ** 2);
+console.log(a > b, a === 5, a !== b, !(a < b));
+console.log("merhaba" + " " + "dunya");
+console.log(`a=${a} b=${b} toplam=${a + b}`);
+console.log("TON".toUpperCase(), "TON".toLowerCase(), "  bosluk  ".trim());
+console.log("a,b,c".split(",").join("-"));
+console.log("merhaba".length, "merhaba".slice(0, 3), "merhaba".includes("hab"));
+console.log("merhaba".replace("a", "A"), "merhaba".startsWith("mer"));
+let s = "";
+s += "bir";
+s += "-iki";
+console.log(s);
+a += 10;
+a -= 2;
+console.log(a);
+console.log(String(42) + "!", Number("3.5"), parseInt("42"));
+console.log(Math.floor(3.7), Math.ceil(3.2), Math.round(3.5), Math.abs(-4), Math.max(1, 9, 3));

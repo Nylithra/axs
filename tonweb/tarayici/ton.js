@@ -62,8 +62,7 @@
     if (v === false) return "false";
     if (typeof v === "number") {
       if (!isFinite(v)) return isNaN(v) ? "NaN" : (v > 0 ? "sonsuz" : "-sonsuz");
-      if (Number.isInteger(v)) return String(v);
-      return String(parseFloat(v.toFixed(12)));
+      return String(v);
     }
     if (typeof v === "string") return v;
     if (Array.isArray(v)) return "[" + v.map(T.gosterim).join(", ") + "]";
@@ -684,15 +683,23 @@
     return c;
   });
 
+  /* Is ikinci bir deger aliyorsa sira numarasi da verilir. */
+  function oge_args(is_, oge, sira) {
+    var kac = (is_ && is_.__adlar) ? is_.__adlar.length : 1;
+    return kac >= 2 ? [oge, sira] : [oge];
+  }
+
   hem(["liste"], ["map", "donustur"], ["liste", "is"], async function (l, is_) {
     var c = [], ogeler = liste_iste(l, "donustur()");
-    for (var i = 0; i < ogeler.length; i++) c.push(await T.cagir(is_, [ogeler[i]]));
+    for (var i = 0; i < ogeler.length; i++) {
+      c.push(await T.cagir(is_, oge_args(is_, ogeler[i], i)));
+    }
     return c;
   });
   hem(["liste"], ["filter", "sec"], ["liste", "is"], async function (l, is_) {
     var c = [], ogeler = liste_iste(l, "sec()");
     for (var i = 0; i < ogeler.length; i++) {
-      if (T.dogru_mu(await T.cagir(is_, [ogeler[i]]))) c.push(ogeler[i]);
+      if (T.dogru_mu(await T.cagir(is_, oge_args(is_, ogeler[i], i)))) c.push(ogeler[i]);
     }
     return c;
   });
@@ -703,8 +710,10 @@
           if (!ogeler.length) return null;
           toplam = ogeler.shift();
         } else { toplam = baslangic; }
+        var ek = (is_ && is_.__adlar && is_.__adlar.length >= 3);
         for (var i = 0; i < ogeler.length; i++) {
-          toplam = await T.cagir(is_, [toplam, ogeler[i]]);
+          toplam = await T.cagir(is_, ek ? [toplam, ogeler[i], i]
+                                         : [toplam, ogeler[i]]);
         }
         return toplam;
       });
@@ -717,7 +726,9 @@
       return kap;
     }
     var ogeler = liste_iste(kap, "hepsi()");
-    for (var j = 0; j < ogeler.length; j++) await T.cagir(is_, [ogeler[j]]);
+    for (var j = 0; j < ogeler.length; j++) {
+      await T.cagir(is_, oge_args(is_, ogeler[j], j));
+    }
     return kap;
   });
   hem(["liste"], ["sort", "sirala"], ["liste", "anahtar", "tersten"],

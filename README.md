@@ -309,6 +309,7 @@ ton -e "print: selam" # tek satır çalıştır
 ton kontrol main.ton  # sadece yazım denetimi
 ton derle app.ton     # tarayıcı için JavaScript üret
 ton paket app.ton     # tek dosyalık çalışır HTML üret
+ton jston hesap.js    # JavaScript kodunu TON'a çevir
 ton yeni projem       # yeni proje oluştur
 ton isler             # bütün hazır işleri listele
 ton -s                # sürüm
@@ -324,6 +325,7 @@ ton.cmd           # çalıştırıcı (Windows)     ->  ton main.ton
 install.sh        # kurulum (Linux/macOS)
 install.cmd       # kurulum (Windows)
 tonlang/          # ÇEKIRDEK (tnl core) - hiç ek gereksinim yok
+  jston/            JavaScript -> TON çevirici
   lexer.py          sözcük çözümleyici
   parser.py         sözdizimi çözümleyici
   interpreter.py    yorumlayıcı
@@ -347,6 +349,37 @@ tests/            # test takımı
 - [docs/tonweb.md](docs/tonweb.md) — web kütüphanesi
 - [docs/tarayici.md](docs/tarayici.md) — tarayıcıda TON
 - [docs/zeka.md](docs/zeka.md) — yapay zekâ sağlayıcıları
+- [docs/jston.md](docs/jston.md) — JavaScript'ten TON'a çevirme
+
+## JavaScript'ten TON'a
+
+Elindeki JS kodunu TON'a çevirir:
+
+```bash
+ton jston hesap.js       # -> hesap.ton
+```
+
+```js
+function topla(a, b = 2) { return a + b; }
+const kare = (x) => x * x;
+console.log(`sonuç: ${topla(3)}`);
+```
+
+```ton
+func topla(a, b = 2)
+  return (%a% + %b%)
+end
+func kare(x)
+  return (%x% * %x%)
+end
+print("sonuç: %(topla(3))%")
+```
+
+Çevrilemeyen yerler çıktıda `# TODO:` olarak işaretlenir ve dosyanın başında
+listelenir — sessizce yanlış kod üretilmez. Doğruluk ölçülür: test takımındaki
+her JS programı hem `node` hem `ton` ile çalıştırılıp çıktıları karşılaştırılır.
+
+Ayrıntılar: [docs/jston.md](docs/jston.md)
 
 ## Windows notları
 

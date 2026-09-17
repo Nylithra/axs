@@ -106,7 +106,8 @@ def _sayi_metni(v):
             return "sonsuz" if v > 0 else "-sonsuz"
         if v.is_integer() and abs(v) < 1e16:
             return str(int(v))
-        return repr(round(v, 12)).rstrip("0").rstrip(".") if "." in repr(v) else repr(v)
+        # En kisa geri-donusturulebilir gosterim (JavaScript ile ayni)
+        return repr(v)
     return str(v)
 
 

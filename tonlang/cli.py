@@ -16,6 +16,7 @@ Kullanim:
   ton kontrol <dosya>             Sadece yazim denetimi yapar
   ton derle <dosya> [-o a.js]     Tarayici icin JavaScript'e cevirir
   ton paket <dosya> [-o a.html]   Tek dosyalik calisir HTML uretir
+  ton jston <dosya.js> [-o a.ton] JavaScript kodunu TON'a cevirir
   ton yeni <ad>                   Yeni bir TON projesi olusturur
   ton isler                       Hazir islerin listesini yazar
   ton -s | --surum                Surumu yazar
@@ -146,6 +147,53 @@ def derle_komutu(argv, paket):
     return 0
 
 
+def jston_komutu(argv):
+    """ton jston <dosya.js> [-o cikti.ton]"""
+    cikti_yolu = None
+    dosyalar = []
+    i = 0
+    while i < len(argv):
+        if argv[i] in ("-o", "--cikti", "--out"):
+            if i + 1 >= len(argv):
+                sys.stderr.write("-o icin dosya adi gerekli\n")
+                return 1
+            cikti_yolu = argv[i + 1]
+            i += 2
+            continue
+        dosyalar.append(argv[i])
+        i += 1
+    if len(dosyalar) != 1:
+        sys.stderr.write("Tek bir .js dosyasi ver\n")
+        return 1
+    kaynak_yolu = dosyalar[0]
+    if not os.path.isfile(kaynak_yolu):
+        sys.stderr.write("Dosya bulunamadi: %s\n" % kaynak_yolu)
+        return 1
+    from .jston import dosya_cevir
+    try:
+        kod, uyarilar = dosya_cevir(kaynak_yolu)
+    except TonError as e:
+        _hata_yaz(e)
+        return 1
+    if cikti_yolu == "-":
+        sys.stdout.write(kod)
+        return 0
+    if cikti_yolu is None:
+        cikti_yolu = os.path.splitext(kaynak_yolu)[0] + ".ton"
+    with open(cikti_yolu, "w", encoding="utf-8") as f:
+        f.write(kod)
+    print("Olusturuldu: %s" % cikti_yolu)
+    if uyarilar:
+        print("\n%d yer elle gozden gecirilmeli (dosyanin basinda da yazili):"
+              % len(uyarilar))
+        for u in uyarilar:
+            print("  - %s" % u)
+    else:
+        print("Ceviri tam: elle duzeltilecek yer yok.")
+    print("\nCalistirmak icin: ton %s" % cikti_yolu)
+    return 0
+
+
 def isleri_yaz():
     y = Yorumlayici()
     adlar = sorted(y.gomulu.keys())
@@ -244,6 +292,8 @@ def main(argv=None):
         return derle_komutu(argv[1:], paket=False)
     if ilk in ("paket", "bundle"):
         return derle_komutu(argv[1:], paket=True)
+    if ilk in ("jston", "js2ton"):
+        return jston_komutu(argv[1:])
     if ilk in ("yeni", "new"):
         if len(argv) < 2:
             sys.stderr.write("yeni icin proje adi gerekli\n")

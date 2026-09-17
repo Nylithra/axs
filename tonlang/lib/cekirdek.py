@@ -155,8 +155,11 @@ def json_oku(ham):
 
 @hem(["liste", "harita", "metin"], "tojson", "jsonyaz")
 def json_yaz(deger, guzel=False):
+    # Bosluksuz bicim: JavaScript'in JSON.stringify ciktisiyla ayni olsun
+    if dogru_mu(guzel):
+        return _json.dumps(pythonlastir(deger), ensure_ascii=False, indent=2)
     return _json.dumps(pythonlastir(deger), ensure_ascii=False,
-                       indent=2 if dogru_mu(guzel) else None)
+                       separators=(",", ":"))
 
 
 @gomulu("now", "simdi")

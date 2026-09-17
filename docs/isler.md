@@ -70,6 +70,14 @@ Türkçeleri: `ekle` `cikar_son` `araya_ekle` `sil` `ilk` `son_oge` `benzersiz`
 `esle` `duzlestir` `kaynastir` `donustur` `sec` `indirge` `hepsi` `grupla`
 `herhangi` `hepsi_dogru`
 
+`map`, `filter`, `each` ve `reduce`: verdiğin iş ikinci bir değer alıyorsa
+sıra numarası da gelir.
+
+```ton
+print(map(["a", "b"], func(oge, sira) -> %sira% + ":" + %oge%))
+# -> ["0:a", "1:b"]
+```
+
 ```ton
 ekle(%liste%, 4)
 print(%liste%.sort(tersten: true))

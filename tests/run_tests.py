@@ -209,6 +209,54 @@ def tarayici_testleri():
     return gecen, kalan, False
 
 
+JSTON_KUTUSU = os.path.join(KOK, "tests", "jston")
+
+
+def jston_testleri():
+    """JavaScript programlarini TON'a cevirir ve ayni ciktiyi verdiklerini dogrular.
+
+    Olcut: `node x.js` ile `ton x.ton` bayt bayt ayni yazmali."""
+    import shutil
+    import tempfile
+
+    node = shutil.which("node")
+    if not node or not os.path.isdir(JSTON_KUTUSU):
+        return 0, [], True
+
+    sys.path.insert(0, KOK)
+    from tonlang.errors import TonError
+    from tonlang.jston import dosya_cevir
+
+    gecen, kalan = 0, []
+    gecici = tempfile.mkdtemp(prefix="ton-jston-")
+    try:
+        for ad in sorted(os.listdir(JSTON_KUTUSU)):
+            if not ad.endswith(".js"):
+                continue
+            js_yolu = os.path.join(JSTON_KUTUSU, ad)
+            p_js = subprocess.run([node, js_yolu], capture_output=True, text=True,
+                                  timeout=120)
+            js_cikti = p_js.stdout + p_js.stderr
+            try:
+                kod, _uyarilar = dosya_cevir(js_yolu)
+            except TonError as e:
+                kalan.append((ad, "cevrilmeli", e.rapor()))
+                continue
+            ton_yolu = os.path.join(gecici, ad[:-3] + ".ton")
+            with open(ton_yolu, "w", encoding="utf-8") as f:
+                f.write(kod)
+            p_ton = subprocess.run([sys.executable, TON, ton_yolu],
+                                   capture_output=True, text=True, timeout=120)
+            ton_cikti = p_ton.stdout + p_ton.stderr
+            if js_cikti == ton_cikti:
+                gecen += 1
+            else:
+                kalan.append((ad, js_cikti.strip()[:200], ton_cikti.strip()[:200]))
+    finally:
+        shutil.rmtree(gecici, ignore_errors=True)
+    return gecen, kalan, False
+
+
 def main():
     argv = sys.argv[1:]
     guncelle = "--guncelle" in argv
@@ -256,8 +304,18 @@ def main():
     for ad, beklenen, bulunan in tkalan:
         print("  KALDI %s\n    beklenen: %s\n    bulunan : %s" % (ad, beklenen, bulunan))
 
-    toplam_kalan = kalan + len(bkalan) + len(tkalan)
-    print("\n%d gecti, %d kaldi" % (gecen + bgecen + tgecen, toplam_kalan))
+    jgecen, jkalan, jatlandi = jston_testleri()
+    if jatlandi:
+        print("\njston testleri: node bulunamadi, atlandi")
+    else:
+        print("\njston testleri (JavaScript -> TON, node ile ayni cikti): "
+              "%d gecti, %d kaldi" % (jgecen, len(jkalan)))
+    for ad, beklenen, bulunan in jkalan:
+        print("  KALDI %s\n    node: %s\n    ton : %s" % (ad, beklenen, bulunan))
+
+    toplam_kalan = kalan + len(bkalan) + len(tkalan) + len(jkalan)
+    print("\n%d gecti, %d kaldi"
+          % (gecen + bgecen + tgecen + jgecen, toplam_kalan))
     return 1 if toplam_kalan else 0
 
 

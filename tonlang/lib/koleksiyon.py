@@ -195,14 +195,29 @@ def duzlestir(liste):
 
 
 # ---------------------------------------------------------- is alan isler
+def _kac_parametre(is_):
+    """Verilen is kac deger aliyor? (sira numarasi gerekli mi diye bakilir)"""
+    from ..values import Islev
+    if isinstance(is_, Islev):
+        return len(is_.parametreler)
+    return 1
+
+
+def _oge_args(is_, oge, sira):
+    """Is ikinci bir deger aliyorsa sira numarasini da verir."""
+    return [oge, sira] if _kac_parametre(is_) >= 2 else [oge]
+
+
 @hem("liste", "map", "donustur", yorumlayici=True)
 def donustur(y, liste, is_):
-    return [y.cagir(is_, [oge]) for oge in _liste(liste, "donustur()")]
+    return [y.cagir(is_, _oge_args(is_, oge, i))
+            for i, oge in enumerate(_liste(liste, "donustur()"))]
 
 
 @hem("liste", "filter", "sec", yorumlayici=True)
 def sec(y, liste, is_):
-    return [oge for oge in _liste(liste, "sec()") if dogru_mu(y.cagir(is_, [oge]))]
+    return [oge for i, oge in enumerate(_liste(liste, "sec()"))
+            if dogru_mu(y.cagir(is_, _oge_args(is_, oge, i)))]
 
 
 @hem("liste", "reduce", "indirge", yorumlayici=True)
@@ -214,8 +229,9 @@ def indirge(y, liste, is_, baslangic=None):
         toplam, ogeler = ogeler[0], ogeler[1:]
     else:
         toplam = baslangic
-    for oge in ogeler:
-        toplam = y.cagir(is_, [toplam, oge])
+    ek = _kac_parametre(is_) >= 3
+    for i, oge in enumerate(ogeler):
+        toplam = y.cagir(is_, [toplam, oge, i] if ek else [toplam, oge])
     return toplam
 
 
@@ -225,8 +241,8 @@ def hepsi(y, kap, is_):
         for k, v in list(kap.items()):
             y.cagir(is_, [k, v])
     else:
-        for oge in _liste(kap, "hepsi()"):
-            y.cagir(is_, [oge])
+        for i, oge in enumerate(_liste(kap, "hepsi()")):
+            y.cagir(is_, _oge_args(is_, oge, i))
     return kap
 
 
