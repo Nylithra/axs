@@ -13,3 +13,7 @@ examples/tarayici/*.html
 
 # token dosyalari
 .env
+
+# bot verisi
+*.db
+ton.db

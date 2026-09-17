@@ -1,0 +1,263 @@
+# Moderasyon komutlari
+use jubb
+use "ortak.ton"
+
+func _hedef(e, alan = "kullanici")
+  return metin(jubb.secenek(%e%, %alan%, ""))
+end
+
+func _sebep(e)
+  return jubb.secenek(%e%, "sebep", "Sebep belirtilmedi")
+end
+
+# ---------------------------------------------------------------- /temizle
+func komut_temizle(e)
+  if not yetkili_mi(%e%, ["mesaj_yonet"])
+    return yetkisiz_cevap(%e%)
+  end
+  adet = number(jubb.secenek(%e%, "adet", 10), 10)
+  if %adet% < 1 or %adet% > 100
+    jubb.cevapla(%e%, hata_kutusu("1 ile 100 arasi bir sayi ver."), gizli: true)
+    return null
+  end
+  sunucu = %e.guild_id%
+  kanal = %e.channel_id%
+  mesajlar = jubb.mesajlar(%sunucu%, %kanal%, %adet%)
+  kimlikler = []
+  for m in %mesajlar%
+    ekle(%kimlikler%, metin(al(%m%, "id", 0)))
+  end
+  if len(%kimlikler%) == 0
+    jubb.cevapla(%e%, uyari_kutusu("Silinecek mesaj bulunamadi."), gizli: true)
+    return null
+  end
+  try
+    jubb.toplu_sil(%sunucu%, %kanal%, %kimlikler%)
+  catch mesaj
+    jubb.cevapla(%e%, hata_kutusu("Silinemedi: " + %mesaj%), gizli: true)
+    return null
+  end
+  jubb.cevapla(%e%, basarili(len(%kimlikler%) + " mesaj silindi."), gizli: true)
+  kayit(%sunucu%, "🧹 Mesaj temizlendi",
+        "<#" + %kanal% + "> kanalinda " + len(%kimlikler%) + " mesaj\n"
+        + "**Yetkili:** " + jubb.bahset(jubb.kim(%e%).id), %RENK_SARI%)
+  return null
+end
+
+# ---------------------------------------------------------------- /sustur
+func komut_sustur(e)
+  if not yetkili_mi(%e%, ["uye_sustur"])
+    return yetkisiz_cevap(%e%)
+  end
+  hedef = _hedef(%e%)
+  dakika = number(jubb.secenek(%e%, "dakika", 10), 10)
+  sebep = _sebep(%e%)
+  if %hedef% == ""
+    jubb.cevapla(%e%, hata_kutusu("Bir kullanici sec."), gizli: true)
+    return null
+  end
+  try
+    jubb.sustur(%e.guild_id%, %hedef%, %dakika% * 60, %sebep%)
+  catch mesaj
+    jubb.cevapla(%e%, hata_kutusu("Susturulamadi: " + %mesaj%), gizli: true)
+    return null
+  end
+  jubb.cevapla(%e%, basarili(jubb.bahset(%hedef%) + " " + %dakika%
+                             + " dakika susturuldu.\n**Sebep:** " + %sebep%))
+  kayit(%e.guild_id%, "🔇 Susturma",
+        "**Kisi:** " + jubb.bahset(%hedef%) + "\n**Sure:** " + %dakika% + " dk\n"
+        + "**Sebep:** " + %sebep% + "\n"
+        + "**Yetkili:** " + jubb.bahset(jubb.kim(%e%).id), %RENK_SARI%)
+  return null
+end
+
+func komut_sustur_kaldir(e)
+  if not yetkili_mi(%e%, ["uye_sustur"])
+    return yetkisiz_cevap(%e%)
+  end
+  hedef = _hedef(%e%)
+  try
+    jubb.susturma_kaldir(%e.guild_id%, %hedef%, _sebep(%e%))
+  catch mesaj
+    jubb.cevapla(%e%, hata_kutusu("Olmadi: " + %mesaj%), gizli: true)
+    return null
+  end
+  jubb.cevapla(%e%, basarili(jubb.bahset(%hedef%) + " artik konusabilir."))
+  kayit(%e.guild_id%, "🔊 Susturma kaldirildi",
+        jubb.bahset(%hedef%) + " - " + jubb.bahset(jubb.kim(%e%).id), %RENK_YESIL%)
+  return null
+end
+
+# ---------------------------------------------------------------- /at  /yasakla
+func komut_at(e)
+  if not yetkili_mi(%e%, ["uye_at"])
+    return yetkisiz_cevap(%e%)
+  end
+  hedef = _hedef(%e%)
+  sebep = _sebep(%e%)
+  try
+    jubb.at(%e.guild_id%, %hedef%, %sebep%)
+  catch mesaj
+    jubb.cevapla(%e%, hata_kutusu("Atilamadi: " + %mesaj%), gizli: true)
+    return null
+  end
+  jubb.cevapla(%e%, basarili(jubb.bahset(%hedef%) + " sunucudan atildi.\n**Sebep:** "
+                             + %sebep%))
+  kayit(%e.guild_id%, "👢 Sunucudan atildi",
+        "**Kisi:** " + jubb.bahset(%hedef%) + "\n**Sebep:** " + %sebep% + "\n"
+        + "**Yetkili:** " + jubb.bahset(jubb.kim(%e%).id), %RENK_KIRMIZI%)
+  return null
+end
+
+func komut_yasakla(e)
+  if not yetkili_mi(%e%, ["uye_yasakla"])
+    return yetkisiz_cevap(%e%)
+  end
+  hedef = _hedef(%e%)
+  sebep = _sebep(%e%)
+  gun = number(jubb.secenek(%e%, "gun", 0), 0)
+  try
+    jubb.yasakla(%e.guild_id%, %hedef%, %sebep%, %gun%)
+  catch mesaj
+    jubb.cevapla(%e%, hata_kutusu("Yasaklanamadi: " + %mesaj%), gizli: true)
+    return null
+  end
+  jubb.cevapla(%e%, basarili(jubb.bahset(%hedef%) + " yasaklandi.\n**Sebep:** "
+                             + %sebep%))
+  kayit(%e.guild_id%, "🔨 Yasaklandi",
+        "**Kisi:** " + jubb.bahset(%hedef%) + "\n**Sebep:** " + %sebep% + "\n"
+        + "**Yetkili:** " + jubb.bahset(jubb.kim(%e%).id), %RENK_KIRMIZI%)
+  return null
+end
+
+func komut_yasak_kaldir(e)
+  if not yetkili_mi(%e%, ["uye_yasakla"])
+    return yetkisiz_cevap(%e%)
+  end
+  hedef = _hedef(%e%)
+  try
+    jubb.yasak_kaldir(%e.guild_id%, %hedef%, _sebep(%e%))
+  catch mesaj
+    jubb.cevapla(%e%, hata_kutusu("Olmadi: " + %mesaj%), gizli: true)
+    return null
+  end
+  jubb.cevapla(%e%, basarili("Yasak kaldirildi."))
+  kayit(%e.guild_id%, "♻️ Yasak kaldirildi",
+        jubb.bahset(%hedef%) + " - " + jubb.bahset(jubb.kim(%e%).id), %RENK_YESIL%)
+  return null
+end
+
+# ---------------------------------------------------------------- uyarilar
+func komut_uyar(e)
+  if not yetkili_mi(%e%, ["mesaj_yonet"])
+    return yetkisiz_cevap(%e%)
+  end
+  hedef = _hedef(%e%)
+  sebep = _sebep(%e%)
+  sunucu = %e.guild_id%
+  yetkili = jubb.kim(%e%).id
+  toplam = uyari_ekle(%sunucu%, %hedef%, %sebep%, %yetkili%)
+
+  jubb.cevapla(%e%, basarili(jubb.bahset(%hedef%) + " uyarildi. (" + %toplam%
+                             + ". uyari)\n**Sebep:** " + %sebep%))
+  kayit(%sunucu%, "⚠️ Uyari",
+        "**Kisi:** " + jubb.bahset(%hedef%) + "\n**Sebep:** " + %sebep% + "\n"
+        + "**Toplam:** " + %toplam% + "\n"
+        + "**Yetkili:** " + jubb.bahset(%yetkili%), %RENK_SARI%)
+
+  # otomatik ceza basamaklari
+  sinir = number(ayar_oku(%sunucu%, "uyari_siniri", "3"), 3)
+  if %toplam% >= %sinir%
+    try
+      jubb.sustur(%sunucu%, %hedef%, 3600, "Uyari siniri asildi")
+      kayit(%sunucu%, "🔇 Otomatik susturma",
+            jubb.bahset(%hedef%) + " " + %toplam% + " uyari ile 1 saat susturuldu",
+            %RENK_KIRMIZI%)
+    catch mesaj
+      print: [moderasyon] otomatik susturma olmadi: %mesaj%
+    end
+  end
+  return null
+end
+
+func komut_uyarilar(e)
+  hedef = _hedef(%e%)
+  if %hedef% == ""
+    hedef = metin(jubb.kim(%e%).id)
+  end
+  sunucu = %e.guild_id%
+  kayitlar = uyari_listesi(%sunucu%, %hedef%)
+  if len(%kayitlar%) == 0
+    jubb.cevapla(%e%, kutu("📋 Uyari kaydi",
+                           jubb.bahset(%hedef%) + " icin uyari yok.", %RENK_YESIL%),
+                 gizli: true)
+    return null
+  end
+  satirlar = ""
+  for k in %kayitlar%
+    satirlar = %satirlar% + "`#" + %k.id% + "` " + %k.sebep%
+             + "  —  " + kes(metin(%k.zaman%), 0, 10) + "\n"
+  end
+  jubb.cevapla(%e%, kutu("📋 " + len(%kayitlar%) + " uyari",
+                         jubb.bahset(%hedef%) + "\n\n" + %satirlar%, %RENK_SARI%),
+               gizli: true)
+  return null
+end
+
+func komut_uyari_sil(e)
+  if not yetkili_mi(%e%, ["mesaj_yonet"])
+    return yetkisiz_cevap(%e%)
+  end
+  hedef = _hedef(%e%)
+  uyari_sil(%e.guild_id%, %hedef%)
+  jubb.cevapla(%e%, basarili(jubb.bahset(%hedef%) + " kisisinin uyarilari silindi."))
+  return null
+end
+
+# ---------------------------------------------------------------- roller
+func komut_rol(e)
+  if not yetkili_mi(%e%, ["rol_yonet"])
+    return yetkisiz_cevap(%e%)
+  end
+  hedef = _hedef(%e%)
+  rol = metin(jubb.secenek(%e%, "rol", ""))
+  islem = jubb.secenek(%e%, "islem", "ver")
+  try
+    if %islem% == "al"
+      jubb.rol_al(%e.guild_id%, %hedef%, %rol%)
+      jubb.cevapla(%e%, basarili("<@&" + %rol% + "> rolu alindi."))
+    else
+      jubb.rol_ver(%e.guild_id%, %hedef%, %rol%)
+      jubb.cevapla(%e%, basarili("<@&" + %rol% + "> rolu verildi."))
+    end
+  catch mesaj
+    jubb.cevapla(%e%, hata_kutusu("Olmadi: " + %mesaj%), gizli: true)
+    return null
+  end
+  kayit(%e.guild_id%, "🎭 Rol islemi",
+        jubb.bahset(%hedef%) + " -> <@&" + %rol% + "> (" + %islem% + ")", %RENK%)
+  return null
+end
+
+# ---------------------------------------------------------------- /sicil
+func komut_sicil(e)
+  hedef = _hedef(%e%)
+  if %hedef% == ""
+    hedef = metin(jubb.kim(%e%).id)
+  end
+  sunucu = %e.guild_id%
+  uyari_adedi = uyari_sayisi(%sunucu%, %hedef%)
+  bilgi = "Bilgi alinamadi"
+  try
+    uye = jubb.uye(%sunucu%, %hedef%)
+    kullanici = al(%uye%, "user", %uye%)
+    bilgi = "**Kullanici:** " + al(%kullanici%, "username", "?") + "\n"
+          + "**Kimlik:** `" + %hedef% + "`\n"
+          + "**Rol sayisi:** " + len(al(%uye%, "roles", []))
+  catch
+    bilgi = "**Kimlik:** `" + %hedef% + "`"
+  end
+  jubb.cevapla(%e%, kutu("👤 Sicil",
+                         %bilgi% + "\n**Uyari:** " + %uyari_adedi%, %RENK%))
+  return null
+end

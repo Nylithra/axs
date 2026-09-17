@@ -265,9 +265,18 @@ MESAJLAR = {
     "bot.ton": ["!selam", "!topla 10 20 12", "!kutu", "merhaba", "!dur"],
     "soket.tarayici.ton": ["!merhaba"],
     "slash.ton": [],
+    "panel.ton": [],
 }
 # Sahte gateway'in yollayacagi slash etkilesimleri
 KOMUTLAR = {
+    "panel.ton": [
+        {"_t": 2, "name": "ayarla"},
+        {"_t": 3, "custom_id": "p_kategori", "values": ["200"]},
+        {"_t": 3, "custom_id": "p_ac"},
+        {"_t": 5, "custom_id": "p_form", "components": [
+            {"components": [{"custom_id": "konu", "value": "Sorun"}]},
+            {"components": [{"custom_id": "aciklama", "value": "Detay"}]}]},
+    ],
     "slash.ton": [
         {"name": "selam"},
         {"name": "topla", "options": [{"name": "bir", "type": 4, "value": 15},
@@ -277,7 +286,7 @@ KOMUTLAR = {
         {"name": "olmayan"},
     ],
 }
-REST_KAYDI = {"bot.ton", "slash.ton"}
+REST_KAYDI = {"bot.ton", "slash.ton", "panel.ton"}
 
 
 def ag_testleri():

@@ -30,11 +30,15 @@ class _Atla(Exception):
 class Kapsam:
     """Degiskenlerin tutuldugu alan."""
 
-    __slots__ = ("degerler", "ust")
+    __slots__ = ("degerler", "ust", "sinir")
 
-    def __init__(self, ust=None, degerler=None):
+    def __init__(self, ust=None, degerler=None, sinir=False):
         self.degerler = dict(degerler or {})
         self.ust = ust
+        # sinir=True: bu bir dosya/modul siniri. Atama bu noktanin otesine
+        # gecmez; boylece bir kutuphanenin ic degiskeni disaridaki ayni adli
+        # degiskeni ezemez.
+        self.sinir = sinir
 
     def bul(self, ad):
         k = self
@@ -53,12 +57,17 @@ class Kapsam:
         return False
 
     def ata(self, ad, deger):
-        """Ad zaten bir ust kapsamda varsa orayi gunceller, yoksa burada acar."""
+        """Ad bir ust kapsamda varsa orayi gunceller, yoksa burada acar.
+
+        Arama modul sinirinda durur: bir dosyanin ici disaridaki degiskenleri
+        kazara degistiremez."""
         k = self
         while k is not None:
             if ad in k.degerler:
                 k.degerler[ad] = deger
                 return
+            if k.sinir:
+                break
             k = k.ust
         self.degerler[ad] = deger
 
@@ -77,6 +86,8 @@ class Yorumlayici:
         self._kutuphane_yukle = kutuphane_yukle
         self.evren = Kapsam()
         self.yuklenenler = {}
+        # `use "komsu.ton"` cagiran dosyanin yanindan cozulur
+        self.klasor_yigini = [self.kok]
         self.gorevler = []
         self._ifade_onbellek = {}
         self.cikti = cikti or (lambda s: (sys.stdout.write(s), sys.stdout.flush()))
@@ -288,11 +299,15 @@ class Yorumlayici:
         if yol in self.yuklenenler:
             modul = self.yuklenenler[yol]
         else:
-            alt = Kapsam(self.evren)
+            alt = Kapsam(self.evren, sinir=True)
             yeni = Isim(os.path.splitext(os.path.basename(yol))[0], {})
             yeni.kaynak = yol
             self.yuklenenler[yol] = yeni
-            self.blok(cozumle(dosya_oku(yol), yol), alt)
+            self.klasor_yigini.append(os.path.dirname(os.path.abspath(yol)))
+            try:
+                self.blok(cozumle(dosya_oku(yol), yol), alt)
+            finally:
+                self.klasor_yigini.pop()
             modul = self.yuklenenler[yol]
             modul.uyeler.update(alt.degerler)
         if d.takma:
@@ -338,15 +353,22 @@ class Yorumlayici:
                     return aday
         return None
 
-    def dosya_bul(self, ad):
+    def su_anki_klasor(self):
+        return self.klasor_yigini[-1] if self.klasor_yigini else self.kok
+
+    def dosya_bul(self, ad, klasor=None):
         adaylar = []
-        temel = ad if os.path.isabs(ad) else os.path.join(self.kok, ad)
+        kok = klasor or self.su_anki_klasor()
+        temel = ad if os.path.isabs(ad) else os.path.join(kok, ad)
         adaylar.append(temel)
         if not os.path.splitext(ad)[1]:
             adaylar += [temel + u for u in UZANTILAR]
         for a in adaylar:
             if os.path.isfile(a):
                 return a
+        # calisan dosyanin yaninda yoksa ana dosyanin yanina da bak
+        if kok != self.kok and not os.path.isabs(ad):
+            return self.dosya_bul(ad, self.kok)
         return None
 
     # ------------------------------------------------------------ ifadeler
@@ -477,11 +499,15 @@ class Yorumlayici:
             except TonTypeError as e:
                 e.satir = satir
                 raise
+        # Haritada kendi alani varsa o kazanir: veri, hazir yontemi golgeler.
+        # (API verilerinde `type`, `count`, `values` gibi alan adlari yaygin)
+        if isinstance(nesne, dict) and ad in nesne:
+            return nesne[ad]
         yontem = self._yontem_bul(nesne, ad)
         if yontem is not None:
             return Bagli(ad, nesne, yontem)
         if isinstance(nesne, dict):
-            return nesne.get(ad)
+            return None
         if isinstance(nesne, Gorev) and ad in ("sonuc", "bitti", "hata"):
             if ad == "sonuc":
                 return nesne.bekle()

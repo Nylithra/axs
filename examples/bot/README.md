@@ -1,12 +1,12 @@
-# TON Jubbio Botu
+# TON — Moderasyon ve Destek Botu
 
-Hem yazılı komutlara (`!selam`) hem **slash komutlarına** (`/selam`) cevap verir.
-Slash komutları açılışta kendiliğinden kaydedilir.
+Jubbio sunucularını spam, reklam ve kötü içeriğe karşı korur; moderasyon ve
+destek araçlarıyla yönetimi kolaylaştırır.
 
-## Çalıştırma
+## Kurulum
 
 ```bash
-cp examples/bot/.env.ornek examples/bot/.env
+cp .env.ornek .env
 ```
 
 `.env` içine:
@@ -17,49 +17,110 @@ JUBB_SUNUCU=sunucu_kimligin
 ```
 
 ```bash
-ton examples/bot/bot.ton
+ton bot.ton
 ```
 
-Durdurmak için `Ctrl-C`.
+Durdurmak için `Ctrl-C`. Ayarlar ve kayıtlar `ton.db` dosyasında tutulur.
 
-> `JUBB_SUNUCU` verirsen slash komutları **anında** görünür. Boş bırakırsan
-> genel (global) kaydedilir ve görünmesi zaman alabilir.
+Sunucuda ilk iş: **`/destek-ayarla`** ve **`/koruma`**.
 
-## Slash komutları
+---
+
+## Destek (ticket) sistemi
+
+`/destek-ayarla` → yalnızca sana görünen bir ayar paneli açılır:
+
+| Seçim | Ne işe yarar |
+|---|---|
+| Ticket kategorisi | Talep kanalları bu kategorinin altında açılır |
+| Yetkili rol | Talepleri görebilecek ve moderasyon yapabilecek rol |
+| Kayıt kanalı | Bütün işlemlerin log'u buraya düşer |
+
+Seçimleri yaptıktan sonra **Paneli Gönder** → bulunduğun kanala herkese açık
+destek paneli düşer.
+
+Akış:
+
+1. Üye **Destek Talebi Oluştur** butonuna basar
+2. Konu ve açıklama formu açılır
+3. `destek-1`, `destek-2` … adıyla özel bir kanal açılır
+   - `@everyone` göremez
+   - Talebi açan kişi ve yetkili rol görebilir
+4. Kanalda **Talebi Kapat** butonu vardır — onaylanınca kanal silinir, log düşer
+
+Aynı anda bir kişinin yalnızca bir açık talebi olabilir.
+
+---
+
+## Koruma (otomatik moderasyon)
+
+`/koruma` → butonlarla açıp kapatılan filtreler:
+
+| Filtre | Yakaladığı |
+|---|---|
+| **reklam** | Bağlantı ve davet linkleri |
+| **kufur** | Engelli kelimeler |
+| **spam** | 7 saniyede 5 mesaj, ya da aynı mesajın 3 kez tekrarı |
+| **caps** | Mesajın %70'inden fazlası büyük harf |
+| **etiket** | Tek mesajda 5+ etiket |
+
+Yakalanan mesaj silinir, kişiye yalnızca kendisinin göreceği bir uyarı gider,
+uyarı kaydı tutulur ve log kanalına düşer. Uyarı sınırı (varsayılan 3) aşılınca
+kişi otomatik 1 saat susturulur.
+
+Mesaj yönetme yetkisi olanlar filtrelerden muaftır.
+
+Engelli kelime listesini değiştirmek için veritabanındaki `engelli_kelimeler`
+ayarını virgülle ayrılmış olarak yaz.
+
+---
+
+## Komutlar
+
+**Herkes**
 
 | Komut | Ne yapar |
 |---|---|
-| `/selam` | Selam verir |
-| `/zar [yuz]` | Zar atar (varsayılan 6 yüzlü) |
-| `/topla bir iki` | İki sayıyı toplar |
-| `/yanki metin` | Yazdığını geri söyler |
-| `/bilgi` | Gömülü kutuda bot bilgisi |
-| `/gizli` | Sadece sana görünen cevap |
+| `/yardim` | Komut listesi |
+| `/botbilgi` | Bot hakkında |
+| `/sicil [kullanici]` | Üye kaydı ve uyarı sayısı |
+| `/uyarilar [kullanici]` | Uyarı kayıtları |
 
-## Yazılı komutlar
+**Moderasyon** (yetki gerekir)
 
-`!selam` · `!zar` · `!topla 1 2 3` · `!yardim`
+| Komut | Gereken yetki |
+|---|---|
+| `/temizle adet` | Mesaj yönet |
+| `/uyar kullanici [sebep]` | Mesaj yönet |
+| `/uyari-sil kullanici` | Mesaj yönet |
+| `/sustur kullanici [dakika] [sebep]` | Üye sustur |
+| `/sustur-kaldir kullanici` | Üye sustur |
+| `/at kullanici [sebep]` | Üye at |
+| `/yasakla kullanici [sebep] [gun]` | Üye yasakla |
+| `/yasak-kaldir kullanici` | Üye yasakla |
+| `/rol kullanici rol [islem]` | Rol yönet |
 
-## Kendi komutunu eklemek
+**Ayarlar** (sunucu yönetme yetkisi)
 
-1. `KOMUTLAR` listesine tanımı ekle:
+`/destek-ayarla` · `/koruma`
 
-```ton
-jubb.komut("hava", "Hava durumu", [
-  {ad: "sehir", aciklama: "Sehir adi", tur: "metin", zorunlu: true}
-])
-```
+Ayarlarda seçtiğin **yetkili rol** de bütün moderasyon komutlarını kullanabilir.
 
-2. `slash_geldi` işine dalı ekle:
+---
 
-```ton
-elif %ad% == "hava"
-  sehir = jubb.secenek(%e%, "sehir", "")
-  jubb.cevapla(%e%, %sehir% + " icin hava: guzel")
-```
+## Dosyalar
 
-Seçenek türleri: `metin` `sayi` `mantik` `kullanici` `kanal` `rol` `ondalik`
+| Dosya | İçerik |
+|---|---|
+| `bot.ton` | Giriş: komut tanımları, olay yönlendirme |
+| `ortak.ton` | Veritabanı, ayarlar, gömülü kutular, yetki, log |
+| `ticket.ton` | Destek sistemi |
+| `moderasyon.ton` | Moderasyon komutları |
+| `koruma.ton` | Otomatik filtreler |
+
+Yeni komut eklemek: `bot.ton` içindeki `KOMUTLAR` listesine tanımı, `slash_geldi`
+işine de bir `elif` dalı ekle.
 
 ## Not
 
-`.env` dosyası `.gitignore` içinde — token'ın depoya gitmez.
+`.env` ve `ton.db` `.gitignore` içinde — token'ın ve kayıtların depoya gitmez.

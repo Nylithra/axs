@@ -1,0 +1,74 @@
+# Panel akisi: menu secimi, buton, form, izinli kanal acma
+use jubb
+
+jubb.giris("SAHTE_TOKEN")
+jubb.ag_ayarla(adres: env("SAHTE_GATEWAY"))
+jubb.ayarla(temel: env("SAHTE_REST"))
+
+SUNUCU = 7
+secilen_kategori = ""
+
+func panel(sunucu)
+  kanallar = jubb.kanallar(%sunucu%)
+  secenekler = []
+  for k in %kanallar%
+    if %k.type% == 4
+      ekle(%secenekler%, {etiket: %k.name%, deger: metin(%k.id%)})
+    end
+  end
+  return {baslik: "Ayarlar", aciklama: "kategori: " + %secilen_kategori%,
+          renk: "#5865f2",
+          bilesenler: [
+            jubb.satir([jubb.menu("p_kategori", %secenekler%, yer_tutucu: "Sec")]),
+            jubb.satir([jubb.buton("Ac", "p_ac", bicim: "yesil", emoji: "🎫")])
+          ]}
+end
+
+func komut(e)
+  print: komut: %(jubb.komut_adi(%e%))%
+  jubb.cevapla(%e%, panel(%SUNUCU%), gizli: true)
+end
+
+func dugme(e)
+  kimlik = jubb.kimlik(%e%)
+  print: dugme: %kimlik%
+  if %kimlik% == "p_kategori"
+    secilen_kategori = jubb.secilen(%e%)
+    jubb.guncelle(%e%, panel(%SUNUCU%))
+  elif %kimlik% == "p_ac"
+    jubb.form_goster(%e%, "p_form", "Talep", [
+      jubb.metin_kutusu("konu", "Konu"),
+      jubb.metin_kutusu("aciklama", "Aciklama", uzun: true)
+    ])
+  end
+end
+
+func form(e)
+  print: form: %(jubb.kimlik(%e%))% konu=%(jubb.form_degeri(%e%, "konu"))%
+  kisi = jubb.kim(%e%)
+  izinler = [
+    jubb.izin_kaydi(%SUNUCU%, [], ["kanali_gor"]),
+    jubb.izin_kaydi(%kisi.id%, ["kanali_gor", "mesaj_yolla", "gecmisi_oku"],
+                    [], uye_mi: true)
+  ]
+  kanal = jubb.kanal_ac(%SUNUCU%, {ad: "destek-1", kategori: %secilen_kategori%,
+                                   izinler: %izinler%})
+  jubb.yolla(%SUNUCU%, %kanal.id%, {baslik: "Talep", aciklama: "acildi",
+                                    renk: "#43b581",
+                                    bilesenler: [jubb.satir([
+                                      jubb.buton("Kapat", "p_kapat", bicim: "kirmizi")
+                                    ])]})
+  jubb.cevapla(%e%, "kanal: " + %kanal.id%, gizli: true)
+end
+
+func katildi(veri)
+  print: bot duruyor
+  jubb.dur()
+end
+
+jubb.dinle("komut", komut)
+jubb.dinle("dugme", dugme)
+jubb.dinle("form", form)
+jubb.dinle("uye_katildi", katildi)
+jubb.calistir(["sunucular"], yeniden_baglan: false)
+print: bitti

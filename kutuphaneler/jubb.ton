@@ -83,10 +83,105 @@ func _mesaj_govdesi(icerik)
   if type(%icerik%) != "harita"
     return {content: metin(%icerik%)}
   end
-  if has(%icerik%, "content") or has(%icerik%, "embeds")
-    return %icerik%
+
+  govde = {}
+  # butonlar / menuler
+  bilesenler = al(%icerik%, "bilesenler", al(%icerik%, "components", null))
+  if %bilesenler% != null
+    %govde%.components = %bilesenler%
   end
-  return {embeds: [gomulu(%icerik%)]}
+  # duz yazi
+  yazi = al(%icerik%, "yazi", al(%icerik%, "content", null))
+  if %yazi% != null
+    %govde%.content = %yazi%
+  end
+  # API alanlari oldugu gibi gecer
+  if has(%icerik%, "embeds")
+    %govde%.embeds = %icerik.embeds%
+    return %govde%
+  end
+  # gomulu kutu alanlari
+  kutu = gomulu(%icerik%)
+  if len(keys(%kutu%)) > 0
+    %govde%.embeds = [%kutu%]
+  end
+  if len(keys(%govde%)) == 0
+    return {content: metin(%icerik%)}
+  end
+  return %govde%
+end
+
+# ---------------------------------------------------------------- bilesenler
+_BUTON_BICIMLERI = {
+  mavi: 1, birincil: 1,
+  gri: 2, ikincil: 2,
+  yesil: 3, onay: 3,
+  kirmizi: 4, tehlike: 4,
+  baglanti: 5, link: 5
+}
+
+# Buton uretir.
+#   jubb.buton("Destek Ac", "ticket_ac", bicim: "yesil", emoji: "🎫")
+func buton(etiket, kimlik = "", bicim = "gri", emoji = "", adres = "", kapali = false)
+  bicim_no = al(%_BUTON_BICIMLERI%, %bicim%, 0)
+  if %bicim_no% == 0
+    hata("Bilinmeyen buton bicimi: " + %bicim% + " - secenekler: "
+         + join(keys(%_BUTON_BICIMLERI%), ", "))
+  end
+  b = {type: 2, style: %bicim_no%, label: %etiket%}
+  if %adres% != ""
+    %b%.style = 5
+    %b%.url = %adres%
+  else
+    %b%.custom_id = %kimlik%
+  end
+  if %emoji% != ""
+    %b%.emoji = {name: %emoji%}
+  end
+  if %kapali%
+    %b%.disabled = true
+  end
+  return %b%
+end
+
+# Bilesen satiri (en fazla 5 buton)
+func satir(bilesenler)
+  return {type: 1, components: %bilesenler%}
+end
+
+# Acilir menu.
+#   jubb.menu("sebep", [{etiket: "Spam", deger: "spam"}], yer_tutucu: "Sec")
+func menu(kimlik, secenekler, yer_tutucu = "Sec...", en_az = 1, en_cok = 1)
+  liste = []
+  for s in %secenekler%
+    oge = {label: al(%s%, "etiket", al(%s%, "label", "")),
+           value: metin(al(%s%, "deger", al(%s%, "value", "")))}
+    aciklama = al(%s%, "aciklama", "")
+    if %aciklama% != ""
+      %oge%.description = %aciklama%
+    end
+    emoji = al(%s%, "emoji", "")
+    if %emoji% != ""
+      %oge%.emoji = {name: %emoji%}
+    end
+    ekle(%liste%, %oge%)
+  end
+  return {type: 3, custom_id: %kimlik%, options: %liste%,
+          placeholder: %yer_tutucu%, min_values: %en_az%, max_values: %en_cok%}
+end
+
+# Form icin metin kutusu
+func metin_kutusu(kimlik, etiket, uzun = false, zorunlu = true, yer_tutucu = "")
+  k = {type: 4, custom_id: %kimlik%, label: %etiket%, required: %zorunlu%}
+  if %uzun%
+    %k%.style = 2
+  else
+    %k%.style = 1
+  end
+  if %yer_tutucu% != ""
+    %k%.placeholder = %yer_tutucu%
+  end
+  return {type: 1, components: [%k%]}
 end
 
 # ---------------------------------------------------------------- yardimcilar
@@ -280,8 +375,34 @@ func kanallar(sunucu)
   return _istek("GET", _sunucu_yolu(%sunucu%) + "/channels")
 end
 
+# Kanal acar.
+#   jubb.kanal_ac(%sunucu%, {ad: "destek-1", kategori: %kat%, izinler: [...]})
 func kanal_ac(sunucu, veri)
-  return _istek("POST", _sunucu_yolu(%sunucu%) + "/channels", %veri%)
+  govde = {}
+  ad = al(%veri%, "ad", al(%veri%, "name", ""))
+  if %ad% != ""
+    %govde%.name = %ad%
+  end
+  %govde%.type = al(%veri%, "tur", al(%veri%, "type", 0))
+  kategori = al(%veri%, "kategori", al(%veri%, "category_id", null))
+  if %kategori% != null
+    %govde%.category_id = %kategori%
+  end
+  izinler = al(%veri%, "izinler", al(%veri%, "permission_overwrites", null))
+  if %izinler% != null
+    %govde%.permission_overwrites = %izinler%
+  end
+  return _istek("POST", _sunucu_yolu(%sunucu%) + "/channels", %govde%)
+end
+
+# Kanal acarken verilecek izin kaydi uretir
+func izin_kaydi(kimlik_no, ver = null, engelle = null, uye_mi = false)
+  tur_no = 0
+  if %uye_mi%
+    tur_no = 1
+  end
+  return {id: metin(%kimlik_no%), type: %tur_no%,
+          allow: metin(izin(%ver% or [])), deny: metin(izin(%engelle% or []))}
 end
 
 func kanal_sil(sunucu, kanal)
@@ -298,6 +419,89 @@ end
 
 func rol_sil(sunucu, rol)
   return _istek("DELETE", _sunucu_yolu(%sunucu%) + "/roles/" + %rol%)
+end
+
+# ---------------------------------------------------------------- izinler
+# Izin degerleri ikinin kuvvetleri; toplamak "veya" ile ayni sonucu verir.
+IZINLER = {
+  davet: 1,
+  uye_at: 2,
+  uye_yasakla: 4,
+  yonetici: 8,
+  kanal_yonet: 16,
+  sunucu_yonet: 32,
+  tepki_ekle: 64,
+  kayit_gor: 128,
+  kanali_gor: 1024,
+  mesaj_yolla: 2048,
+  mesaj_yonet: 8192,
+  baglanti: 16384,
+  dosya: 32768,
+  gecmisi_oku: 65536,
+  bahset: 524288,
+  ses_baglan: 1048576,
+  konus: 2097152,
+  uye_sustur: 1099511627776,
+  rol_yonet: 2199023255552
+}
+
+func izin(adlar)
+  if type(%adlar%) != "liste"
+    return %adlar%
+  end
+  toplam = 0
+  for ad in %adlar%
+    deger = al(%IZINLER%, %ad%, 0)
+    if %deger% == 0
+      hata("Bilinmeyen izin: " + %ad% + " - secenekler: " + join(keys(%IZINLER%), ", "))
+    end
+    toplam = %toplam% + %deger%
+  end
+  return %toplam%
+end
+
+# Uyenin izni var mi? (uye.permissions alanina bakar)
+#   jubb.izni_var(%e.member%, ["uye_at", "uye_yasakla"])
+func izni_var(uye, adlar)
+  ham = al(%uye%, "permissions", null)
+  if %ham% == null
+    return false
+  end
+  sahip = number(%ham%, 0)
+  # yonetici her seyi yapabilir
+  if _bit_var(%sahip%, 8)
+    return true
+  end
+  if type(%adlar%) != "liste"
+    return _bit_var(%sahip%, %adlar%)
+  end
+  # her izni ayri ayri kontrol et (birlesik maske yanlis sonuc verir)
+  for ad in %adlar%
+    if not _bit_var(%sahip%, al(%IZINLER%, %ad%, 0))
+      return false
+    end
+  end
+  return true
+end
+
+# TON'da bit isleci yok; bolme ile bakiyoruz
+func _bit_var(deger, bit)
+  if %bit% == 0
+    return true
+  end
+  return (%deger% / %bit%) mod 2 >= 1
+end
+
+# Kanal izni ekler/degistirir.
+#   jubb.kanal_izni(%kanal%, %rol%, ver: ["kanali_gor"], engelle: [])
+func kanal_izni(kanal, kimlik_no, ver = null, engelle = null, uye_mi = false)
+  tur_no = 0
+  if %uye_mi%
+    tur_no = 1
+  end
+  return _istek("PUT", "/bot/channels/" + %kanal% + "/permissions/" + %kimlik_no%,
+                {type: %tur_no%, allow: metin(izin(%ver% or [])),
+                 deny: metin(izin(%engelle% or []))})
 end
 
 # ---------------------------------------------------------------- komutlar
@@ -382,6 +586,51 @@ func secenek(etkilesim, ad, varsayilan = null)
   return %varsayilan%
 end
 
+# Etkilesim turu: "komut" | "dugme" | "form" | "otomatik"
+func etkilesim_turu(etkilesim)
+  tur_no = al(%etkilesim%, "type", 2)
+  if %tur_no% == 3
+    return "dugme"
+  elif %tur_no% == 5
+    return "form"
+  elif %tur_no% == 4
+    return "otomatik"
+  end
+  return "komut"
+end
+
+# Butona/menuye basildiginda: hangi kimlik?
+func kimlik(etkilesim)
+  return al(al(%etkilesim%, "data", {}), "custom_id", "")
+end
+
+# Menuden secilenler (liste)
+func secilenler(etkilesim)
+  return al(al(%etkilesim%, "data", {}), "values", [])
+end
+
+# Menuden secilen tek deger
+func secilen(etkilesim, varsayilan = "")
+  degerler = secilenler(%etkilesim%)
+  if len(%degerler%) == 0
+    return %varsayilan%
+  end
+  return %degerler[0]%
+end
+
+# Formdan gelen alan degeri
+func form_degeri(etkilesim, kimlik_adi, varsayilan = "")
+  veri = al(%etkilesim%, "data", {})
+  for satir_ogesi in al(%veri%, "components", [])
+    for alan in al(%satir_ogesi%, "components", [])
+      if al(%alan%, "custom_id", "") == %kimlik_adi%
+        return al(%alan%, "value", %varsayilan%)
+      end
+    end
+  end
+  return %varsayilan%
+end
+
 # Komutu kimin yazdigi
 func kim(etkilesim)
   uye = al(%etkilesim%, "member", null)
@@ -423,6 +672,21 @@ func cevap_duzenle(etkilesim, icerik)
                 _mesaj_govdesi(%icerik%))
 end
 
+# Butona basilan mesaji degistirir (yeni mesaj atmaz)
+func guncelle(etkilesim, icerik)
+  return _istek("POST",
+                "/interactions/" + %etkilesim.id% + "/" + %etkilesim.token% + "/callback",
+                {type: 7, data: _mesaj_govdesi(%icerik%)})
+end
+
+# Kullaniciya form (modal) gosterir
+func form_goster(etkilesim, kimlik_adi, baslik, alanlar)
+  return _istek("POST",
+                "/interactions/" + %etkilesim.id% + "/" + %etkilesim.token% + "/callback",
+                {type: 9, data: {custom_id: %kimlik_adi%, title: %baslik%,
+                                 components: %alanlar%}})
+end
+
 func ek_cevap(etkilesim, icerik)
   return _istek("POST", "/webhooks/" + %_ayar.uygulama% + "/" + %etkilesim.token%,
                 _mesaj_govdesi(%icerik%))
@@ -457,7 +721,9 @@ _OLAYLAR = {
   mesaj_silindi: "MESSAGE_DELETE",
   mesajlar_silindi: "MESSAGE_DELETE_BULK",
   komut: "INTERACTION_CREATE",
-  etkilesim: "INTERACTION_CREATE",
+  etkilesim: "_ETKILESIM",
+  dugme: "_DUGME",
+  form: "_FORM",
   sunucu_eklendi: "GUILD_CREATE",
   sunucu_guncellendi: "GUILD_UPDATE",
   sunucu_silindi: "GUILD_DELETE",
@@ -592,6 +858,17 @@ func _paket_isle(paket)
     end
     if %olay% == "MESSAGE_CREATE"
       veri = _mesaj_duzelt(%veri%)
+    end
+    if %olay% == "INTERACTION_CREATE"
+      _duyur("_ETKILESIM", %veri%)
+      alt_tur = etkilesim_turu(%veri%)
+      if %alt_tur% == "dugme"
+        _duyur("_DUGME", %veri%)
+        return null
+      elif %alt_tur% == "form"
+        _duyur("_FORM", %veri%)
+        return null
+      end
     end
     _duyur(%olay%, %veri%)
   elif %op% == 10

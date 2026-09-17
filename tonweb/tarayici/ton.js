@@ -215,11 +215,13 @@
       if (Object.prototype.hasOwnProperty.call(nesne, ad)) return nesne[ad];
       throw TonHata("baglanti uzerinde '" + ad + "' yok");
     }
+    // Haritada kendi alani varsa o kazanir (veri, hazir yontemi golgeler)
+    if (harita_mi(nesne) && Object.prototype.hasOwnProperty.call(nesne, ad)) {
+      return nesne[ad];
+    }
     var tablo = YONTEMLER[t];
     if (tablo && tablo[ad]) return bagla(tablo[ad], nesne, ad);
-    if (harita_mi(nesne)) {
-      return Object.prototype.hasOwnProperty.call(nesne, ad) ? nesne[ad] : null;
-    }
+    if (harita_mi(nesne)) return null;
     if (nesne && nesne.__gorev) {
       if (ad === "bitti") return nesne.bitti;
       if (ad === "sonuc") return nesne.sozu;

@@ -25,7 +25,7 @@ PATCH /yanki/bot/guilds/7/members/42 {"nick":"yeni ad"}
 --- sunucu ---
 GET /yanki/bot/guilds/7
 GET /yanki/bot/guilds/7/channels
-POST /yanki/bot/guilds/7/channels {"name":"genel"}
+POST /yanki/bot/guilds/7/channels {"name":"genel","type":0}
 DELETE /yanki/bot/guilds/7/channels/9
 GET /yanki/bot/guilds/7/roles
 POST /yanki/bot/guilds/7/roles {"name":"uye"}

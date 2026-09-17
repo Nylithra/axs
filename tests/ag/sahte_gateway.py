@@ -102,14 +102,20 @@ def oturum(baglanti, kayit):
                           "author": {"id": 42, "username": "nyl", "bot": False}}}))
             if paketler:
                 cerceve_yaz(baglanti, "\n".join(paketler))
-            # slash komutu etkilesimleri
+            # etkilesimler: komut (2), dugme/menu (3), form (5)
+            uye = json.loads(os.environ.get(
+                "SAHTE_UYE",
+                '{"user": {"id": 42, "username": "nyl"}, "permissions": "8", '
+                '"roles": []}'))
             for i, ham in enumerate(json.loads(os.environ.get("SAHTE_KOMUTLAR", "[]"))):
+                ham = dict(ham)
+                etkilesim_turu = ham.pop("_t", 2)
                 cerceve_yaz(baglanti, json.dumps({
                     "op": 0, "s": 50 + i, "t": "INTERACTION_CREATE",
-                    "d": {"id": 500 + i, "token": "TKN%d" % i, "type": 2,
+                    "d": {"id": 500 + i, "token": "TKN%d" % i,
+                          "type": etkilesim_turu,
                           "guild_id": 7, "channel_id": 9,
-                          "member": {"user": {"id": 42, "username": "nyl"}},
-                          "data": ham}}))
+                          "member": uye, "data": ham}}))
             cerceve_yaz(baglanti, json.dumps({
                 "op": 0, "s": 4, "t": "GUILD_MEMBER_ADD",
                 "d": {"guild_id": 7, "user": {"id": 43, "username": "yeni"}}}))
