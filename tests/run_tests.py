@@ -6,6 +6,7 @@
     python3 tests/run_tests.py 05         # sadece adinda 05 gecenler
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -112,6 +113,75 @@ def birim_testleri():
     return gecen, kalan
 
 
+TARAYICI_DURUMLARI = [
+    "01_degiskenler", "02_islemler", "03_kosul_dongu", "04_isler",
+    "05_metin", "06_koleksiyon", "11_esyamanli", "12_kullan",
+]
+
+
+def tarayici_testleri():
+    """Ayni test dosyalarini JavaScript'e derleyip node ile calistirir.
+
+    Cekirdek ve tarayici ayni ciktiyi vermek zorundadir."""
+    import shutil
+    import tempfile
+
+    node = shutil.which("node")
+    if not node:
+        return 0, [], True
+
+    sys.path.insert(0, KOK)
+    from tonlang.derleyici import dosya_derle
+    from tonlang.errors import TonError
+
+    gecen, kalan = 0, []
+    calisma_zamani = os.path.join(KOK, "tonweb", "tarayici", "ton.js")
+
+    # 1) isler.json, ton.js ile ayni mi?
+    p = subprocess.run(
+        [node, "-e", "require(%s); console.log(JSON.stringify(Object.keys(TON._HAZIR).sort()))"
+         % json.dumps(calisma_zamani)],
+        capture_output=True, text=True, timeout=60)
+    try:
+        canli = json.loads(p.stdout)
+    except ValueError:
+        canli = None
+    with open(os.path.join(KOK, "tonweb", "tarayici", "isler.json"), encoding="utf-8") as f:
+        kayitli = json.load(f)
+    if canli is not None and canli == kayitli:
+        gecen += 1
+    else:
+        kalan.append(("isler.json", "ton.js ile ayni", "farkli - yeniden uret"))
+
+    # 2) test dosyalari ayni ciktiyi veriyor mu?
+    gecici = tempfile.mkdtemp(prefix="ton-js-")
+    try:
+        for ad in TARAYICI_DURUMLARI:
+            kaynak = os.path.join(KUTU, ad + ".ton")
+            try:
+                kod = dosya_derle(kaynak)
+            except TonError as e:
+                kalan.append((ad, "derlenmeli", e.rapor()))
+                continue
+            js_yolu = os.path.join(gecici, ad + ".js")
+            with open(js_yolu, "w", encoding="utf-8") as f:
+                f.write(kod)
+            p = subprocess.run(
+                [node, "-e", "require(%s); require(%s);"
+                 % (json.dumps(calisma_zamani), json.dumps(js_yolu))],
+                capture_output=True, text=True, timeout=120)
+            bulunan = p.stdout + p.stderr
+            with open(os.path.join(KUTU, ad + ".out"), encoding="utf-8") as f:
+                beklenen = f.read()
+            if bulunan == beklenen:
+                gecen += 1
+            else:
+                kalan.append((ad, beklenen.strip()[:120], bulunan.strip()[:120]))
+    finally:
+        shutil.rmtree(gecici, ignore_errors=True)
+    return gecen, kalan, False
+
+
 def main():
     argv = sys.argv[1:]
     guncelle = "--guncelle" in argv
@@ -150,8 +220,17 @@ def main():
     for kaynak, beklenen, bulunan in bkalan:
         print("  KALDI %r\n    beklenen: %s\n    bulunan : %s" % (kaynak, beklenen, bulunan))
 
-    toplam_kalan = kalan + len(bkalan)
-    print("\n%d gecti, %d kaldi" % (gecen + bgecen, toplam_kalan))
+    tgecen, tkalan, atlandi = tarayici_testleri()
+    if atlandi:
+        print("\nTarayici testleri: node bulunamadi, atlandi")
+    else:
+        print("\nTarayici testleri (TON -> JavaScript): %d gecti, %d kaldi"
+              % (tgecen, len(tkalan)))
+    for ad, beklenen, bulunan in tkalan:
+        print("  KALDI %s\n    beklenen: %s\n    bulunan : %s" % (ad, beklenen, bulunan))
+
+    toplam_kalan = kalan + len(bkalan) + len(tkalan)
+    print("\n%d gecti, %d kaldi" % (gecen + bgecen + tgecen, toplam_kalan))
     return 1 if toplam_kalan else 0
 
 

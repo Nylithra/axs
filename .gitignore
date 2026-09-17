@@ -5,3 +5,8 @@ __pycache__/
 .venv/
 _gecici/
 .DS_Store
+*.ton.js
+
+# `ton paket` ciktilari (govde dosyalari kalir)
+examples/tarayici/*.html
+!examples/tarayici/*.govde.html

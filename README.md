@@ -249,6 +249,43 @@ Ayrıntılar: [docs/tonweb.md](docs/tonweb.md)
 
 ---
 
+## Tarayıcıda TON
+
+Aynı dil tarayıcıda da çalışır. `ton` komutu TON'u JavaScript'e çevirir.
+
+```ton
+sayi = saklanan("sayi", 0)
+
+func arttir(olay)
+  sayi += 1
+  yaz_metin("#sayi", %sayi%)
+  sakla("sayi", %sayi%)
+end
+
+tikla("#arttir", arttir)
+```
+
+```bash
+ton paket sayac.ton      # sayac.html — çift tıkla, açılır. Sunucu bile gerekmez.
+```
+
+Ağ işleri tarayıcıda da düz görünür; geri çağrı (callback) yok:
+
+```ton
+notlar = get("/api/notlar")             # arka planda fetch olur
+sonuc = post("/api/ekle", {metin: %m%})
+```
+
+Sunucuyla birlikte çalıştırmak için:
+
+```ton
+web.uygulama("/", "uygulamam.ton")      # sayfa + derlenmiş kod, her istekte tazelenir
+```
+
+Ayrıntılar: [docs/tarayici.md](docs/tarayici.md)
+
+---
+
 ## Komutlar
 
 ```bash
@@ -256,6 +293,8 @@ ton main.ton          # dosyayı çalıştır
 ton                   # etkileşimli kabuk (REPL)
 ton -e "print: selam" # tek satır çalıştır
 ton kontrol main.ton  # sadece yazım denetimi
+ton derle app.ton     # tarayıcı için JavaScript üret
+ton paket app.ton     # tek dosyalık çalışır HTML üret
 ton yeni projem       # yeni proje oluştur
 ton isler             # bütün hazır işleri listele
 ton -s                # sürüm
@@ -276,6 +315,10 @@ tonlang/          # ÇEKIRDEK (tnl core) - hiç ek gereksinim yok
   interpreter.py    yorumlayıcı
   lib/              hazır işler (metin, liste, dosya, ağ, veri, zekâ, meta...)
 tonweb/           # web kütüphanesi (use web)
+  sunucu.py         yollar, istekler, cevaplar
+  html.py           HTML üretimi
+  tarayici/ton.js   TARAYICI çalışma zamanı (hazır işler + DOM)
+  paket.py          tek dosyalık HTML paketleme
 examples/         # örnekler
 docs/             # dil kılavuzu
 tests/            # test takımı
@@ -288,6 +331,7 @@ tests/            # test takımı
 - [docs/dil.md](docs/dil.md) — tam dil kılavuzu
 - [docs/isler.md](docs/isler.md) — bütün hazır işler
 - [docs/tonweb.md](docs/tonweb.md) — web kütüphanesi
+- [docs/tarayici.md](docs/tarayici.md) — tarayıcıda TON
 
 ## Windows notları
 

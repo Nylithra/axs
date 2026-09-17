@@ -93,16 +93,26 @@ def _adres_kur(temel, yol, parametreler=None):
 
 
 # ---------------------------------------------------------------- tek seferlik
+def _basariyi_dogrula(cevap, adres):
+    """Sunucu hata dondurduyse sessizce gecmeyelim."""
+    if cevap["basarili"]:
+        return cevap["veri"]
+    ozet = _metin(cevap["veri"])
+    if len(ozet) > 200:
+        ozet = ozet[:200] + "..."
+    raise TonRuntimeError("Istek basarisiz (%s) %s: %s" % (cevap["durum"], adres, ozet))
+
+
 @gomulu("get", "getir")
 def getir(adres, parametreler=None, basliklar=None, zaman_asimi=None):
-    c = _istek("GET", _adres_kur("", adres, parametreler), None, basliklar, zaman_asimi)
-    return c["veri"]
+    tam = _adres_kur("", adres, parametreler)
+    return _basariyi_dogrula(_istek("GET", tam, None, basliklar, zaman_asimi), tam)
 
 
 @gomulu("post", "gonder")
 def gonder(adres, veri=None, basliklar=None, zaman_asimi=None):
-    c = _istek("POST", _adres_kur("", adres), veri, basliklar, zaman_asimi)
-    return c["veri"]
+    tam = _adres_kur("", adres)
+    return _basariyi_dogrula(_istek("POST", tam, veri, basliklar, zaman_asimi), tam)
 
 
 @gomulu("request", "istek")
@@ -141,7 +151,7 @@ def _http_baglanti(adres):
             alan.uyeler["durum"] = c["durum"]
             alan.uyeler["basarili"] = c["basarili"]
             alan.uyeler["son"] = c
-            return c["veri"]
+            return _basariyi_dogrula(c, durum["adres"] + "/" + _metin(yol).lstrip("/"))
         return fn
 
     def ping():

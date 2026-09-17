@@ -21,7 +21,7 @@ print(merge({a: 1}, {b: 2}))
 
 kisiler = [{ad: "a", yas: 30}, {ad: "b", yas: 20}, {ad: "c", yas: 30}]
 print(sort(%kisiler%, "yas"))
-print(group(%kisiler%, "yas"))
+print(group(%kisiler%, "ad"))
 print(sum(%kisiler%, "yas"))
 print(any([1, 2], func(x) -> %x% > 1), all([1, 2], func(x) -> %x% > 1))
 print(shuffle([1]).len())

@@ -14,6 +14,8 @@ Kullanim:
   ton                             Etkilesimli kabuk (REPL)
   ton -e "print: merhaba"         Tek satir kod calistirir
   ton kontrol <dosya>             Sadece yazim denetimi yapar
+  ton derle <dosya> [-o a.js]     Tarayici icin JavaScript'e cevirir
+  ton paket <dosya> [-o a.html]   Tek dosyalik calisir HTML uretir
   ton yeni <ad>                   Yeni bir TON projesi olusturur
   ton isler                       Hazir islerin listesini yazar
   ton -s | --surum                Surumu yazar
@@ -95,6 +97,52 @@ def yeni_proje(ad):
     with open(ana, "w", encoding="utf-8") as f:
         f.write(ORNEK % os.path.basename(klasor))
     print("Olusturuldu: %s\nCalistirmak icin: ton %s" % (ana, os.path.join(ad, "main.ton")))
+    return 0
+
+
+def derle_komutu(argv, paket):
+    """ton derle / ton paket"""
+    if not argv:
+        sys.stderr.write("Kaynak dosya gerekli\n")
+        return 1
+    cikti_yolu = None
+    dosyalar = []
+    i = 0
+    while i < len(argv):
+        if argv[i] in ("-o", "--cikti", "--out"):
+            if i + 1 >= len(argv):
+                sys.stderr.write("-o icin dosya adi gerekli\n")
+                return 1
+            cikti_yolu = argv[i + 1]
+            i += 2
+            continue
+        dosyalar.append(argv[i])
+        i += 1
+    if len(dosyalar) != 1:
+        sys.stderr.write("Tek bir kaynak dosya ver\n")
+        return 1
+    yol = dosya_coz(dosyalar[0])
+    if yol is None:
+        sys.stderr.write("Dosya bulunamadi: %s\n" % dosyalar[0])
+        return 1
+    try:
+        sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        from tonweb.paket import derle as tarayiciya_derle, sayfa
+        icerik = sayfa(yol) if paket else tarayiciya_derle(yol)
+    except TonError as e:
+        _hata_yaz(e)
+        return 1
+    except ImportError:
+        sys.stderr.write("tonweb bulunamadi; tarayici derleyicisi icin gerekli.\n")
+        return 1
+    if cikti_yolu is None:
+        temel = os.path.splitext(yol)[0]
+        cikti_yolu = temel + (".html" if paket else ".ton.js")
+    with open(cikti_yolu, "w", encoding="utf-8") as f:
+        f.write(icerik)
+    print("Olusturuldu: %s" % cikti_yolu)
+    if paket:
+        print("Tarayicida acmak icin dosyaya cift tikla.")
     return 0
 
 
@@ -192,6 +240,10 @@ def main(argv=None):
             sys.stderr.write("Dosya bulunamadi: %s\n" % argv[1])
             return 1
         return kontrol(yol)
+    if ilk in ("derle", "build"):
+        return derle_komutu(argv[1:], paket=False)
+    if ilk in ("paket", "bundle"):
+        return derle_komutu(argv[1:], paket=True)
     if ilk in ("yeni", "new"):
         if len(argv) < 2:
             sys.stderr.write("yeni icin proje adi gerekli\n")

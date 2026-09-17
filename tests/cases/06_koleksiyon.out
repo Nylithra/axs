@@ -13,7 +13,7 @@ true varsayilan
 {ad: "Nyl", sehir: "Ankara"}
 {a: 1, b: 2}
 [{ad: "b", yas: 20}, {ad: "a", yas: 30}, {ad: "c", yas: 30}]
-{30: [{ad: "a", yas: 30}, {ad: "c", yas: 30}], 20: [{ad: "b", yas: 20}]}
+{a: [{ad: "a", yas: 30}], b: [{ad: "b", yas: 20}], c: [{ad: "c", yas: 30}]}
 80
 true false
 1

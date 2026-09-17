@@ -7,13 +7,21 @@ import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from tonlang.errors import TonRuntimeError, TonTypeError
+from tonlang.errors import TonError, TonRuntimeError, TonTypeError
 from tonlang.lib import isim_alani, kutuphane
-from tonlang.values import (Isim, cagrilabilir_mi, metin as _metin, pythonlastir,
+from tonlang.values import (Gomulu, Isim, cagrilabilir_mi, metin as _metin, pythonlastir,
                             tonlastir, tur as _tur)
 
 from . import html as H
 from .surum import SURUM
+
+
+VARSAYILAN_SIMGE = (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">'
+    '<rect width="64" height="64" rx="14" fill="#2f6fed"/>'
+    '<text x="32" y="45" font-family="system-ui,sans-serif" font-size="38" '
+    'font-weight="700" fill="#fff" text-anchor="middle">T</text></svg>'
+).encode("utf-8")
 
 
 class Cevap:
@@ -185,6 +193,8 @@ def _isleyici_kur(uygulama):
         def _bulunamadi(self, yol):
             if uygulama.bulunamadi_isi is not None:
                 return _cevaba_cevir(y.cagir(uygulama.bulunamadi_isi, [yol]))
+            if yol == "/favicon.ico":
+                return Cevap(VARSAYILAN_SIMGE, 200, "image/svg+xml")
             govde = H.sayfa(baslik="Bulunamadi",
                             govde="<h1>404</h1><p><code>%s</code> bulunamadi.</p>"
                                   % H.kacir(yol))
@@ -346,6 +356,78 @@ def yukle(y):
     def yollari_yaz():
         return [{"yontem": k["yontem"], "yol": k["desen"]} for k in uygulama.yollar]
 
+    # ---------------------------------------------------------- tarayici tarafi
+    def _ic_yol(yontem, desen, fn, ad="ic"):
+        """Python tarafindan yazilmis bir isleyiciyi yola baglar."""
+        uygulama.yol_ekle(yontem, desen, Gomulu("web." + ad, fn))
+        return True
+
+    def tarayici_js(yol="/ton.js"):
+        """ton.js calisma zamanini yayinlar."""
+        from .paket import calisma_zamani
+        icerik = calisma_zamani().encode("utf-8")
+
+        def isle(istek):
+            return Cevap(icerik, 200, "application/javascript; charset=utf-8")
+        return _ic_yol("GET", yol, isle, "ton_js")
+
+    def betik(yol, ton_dosyasi):
+        """Bir .ton dosyasini derleyip JavaScript olarak yayinlar.
+
+        Her istekte yeniden derlenir; dosyayi degistirip sayfayi yenilemen yeter."""
+        from .paket import derle as tarayiciya_derle
+        kaynak = _yol(ton_dosyasi)
+
+        def isle(istek):
+            try:
+                kod = tarayiciya_derle(kaynak)
+            except TonError as e:
+                kod = ("TON.hata_goster({mesaj: %s});"
+                       % _json.dumps(e.rapor()))
+            return Cevap(kod.encode("utf-8"), 200, "application/javascript; charset=utf-8")
+        return _ic_yol("GET", yol, isle, "betik")
+
+    def uygulama_ekle(yol, ton_dosyasi, baslik=None, govde=None, js_yolu=None):
+        """Tarayicida calisan bir TON uygulamasini yayinlar.
+
+        web.uygulama("/", "sayac.ton")  ->  sayfa + ton.js + derlenmis kod"""
+        from .paket import sayfa as paket_sayfasi
+        kaynak = _yol(ton_dosyasi)
+        ad = os.path.splitext(os.path.basename(kaynak))[0]
+        betik_yolu = js_yolu or ("/%s.ton.js" % ad)
+        if not any(k["desen"] == "/ton.js" for k in uygulama.yollar):
+            tarayici_js("/ton.js")
+        betik(betik_yolu, kaynak)
+
+        def isle(istek):
+            try:
+                html = paket_sayfasi(kaynak, baslik=baslik, govde=govde, gomulu=False,
+                                     betik_adresi=betik_yolu)
+            except TonError as e:
+                html = H.sayfa(baslik="Hata",
+                               govde="<h1>Derleme hatasi</h1><pre>%s</pre>"
+                                     % H.kacir(e.rapor()))
+                return Cevap(html.encode("utf-8"), 500)
+            return Cevap(html.encode("utf-8"), 200)
+        return _ic_yol("GET", yol, isle, "uygulama")
+
+    def ai_ucu(yol="/api/ai"):
+        """Tarayicidaki ai() bu uca gelir; anahtar sunucuda kalir."""
+        from tonlang.lib.zeka import zeka
+
+        def isle(istek):
+            veri = istek.get("veri") or {}
+            soru = veri.get("soru") or veri.get("prompt") or ""
+            if not soru:
+                return Cevap(b'{"hata":"soru bos"}', 400,
+                             "application/json; charset=utf-8")
+            try:
+                cevap = zeka(soru, model=veri.get("model"), kisilik=veri.get("kisilik"))
+            except TonError as e:
+                return json_cevap({"hata": e.mesaj}, 500)
+            return json_cevap({"cevap": cevap})
+        return _ic_yol("POST", yol, isle, "ai_ucu")
+
     def hata_isi(isle):
         uygulama.hata_isi = isle
         return True
@@ -362,6 +444,11 @@ def yukle(y):
         "route": yol_ekle, "yol": yol_ekle,
         "static": duragan, "duragan": duragan,
         "routes": yollari_yaz, "yollar": yollari_yaz,
+        # tarayici tarafi
+        "app": uygulama_ekle, "uygulama": uygulama_ekle,
+        "script": betik, "betik": betik,
+        "runtime": tarayici_js, "tarayici_js": tarayici_js,
+        "ai_endpoint": ai_ucu, "ai_ucu": ai_ucu,
         "on_error": hata_isi, "hata_olunca": hata_isi,
         "on_missing": bulunamadi_isi, "bulunamazsa": bulunamadi_isi,
         # cevaplar
