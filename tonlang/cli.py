@@ -277,7 +277,14 @@ def main(argv=None):
         print(YARDIM)
         return 0
     if ilk in ("-s", "--surum", "-v", "--version"):
+        paket_koku = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         print("%s %s" % (SURUM_ADI, SURUM))
+        print("  calisan kopya : %s" % paket_koku)
+        kutuphane = os.path.join(paket_koku, "kutuphaneler")
+        if os.path.isdir(kutuphane):
+            adlar = sorted(a[:-4] for a in os.listdir(kutuphane) if a.endswith(".ton"))
+            print("  kutuphaneler  : %s" % (", ".join(adlar) or "-"))
+        print("  python        : %d.%d.%d" % sys.version_info[:3])
         return 0
     if ilk in ("-e", "--calistir", "--eval"):
         if len(argv) < 2:

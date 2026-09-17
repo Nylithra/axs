@@ -6,13 +6,20 @@ from .errors import TonTypeError
 class Isim:
     """Bir isim alani (namespace): web.serve(...) gibi kullanilir."""
 
-    def __init__(self, ad, uyeler=None):
+    def __init__(self, ad, uyeler=None, kaynak=None):
         self.ad = ad
         self.uyeler = dict(uyeler or {})
+        self.kaynak = kaynak      # TON ile yazilmis kutuphanelerde dosya yolu
 
     def get(self, ad):
         if ad not in self.uyeler:
-            raise TonTypeError("'%s' icinde '%s' yok" % (self.ad, ad))
+            nereden = ""
+            if self.kaynak:
+                nereden = "\n  ('%s' su dosyadan yuklendi: %s)" % (self.ad, self.kaynak)
+            benzer = [u for u in sorted(self.uyeler) if u.startswith(ad[:3])][:4]
+            oneri = ("\n  Bunlar var: " + ", ".join(benzer)) if benzer else ""
+            raise TonTypeError("'%s' icinde '%s' yok%s%s"
+                               % (self.ad, ad, oneri, nereden))
         return self.uyeler[ad]
 
     def __repr__(self):

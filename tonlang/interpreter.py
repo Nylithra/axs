@@ -289,7 +289,9 @@ class Yorumlayici:
             modul = self.yuklenenler[yol]
         else:
             alt = Kapsam(self.evren)
-            self.yuklenenler[yol] = Isim(os.path.splitext(os.path.basename(yol))[0], {})
+            yeni = Isim(os.path.splitext(os.path.basename(yol))[0], {})
+            yeni.kaynak = yol
+            self.yuklenenler[yol] = yeni
             self.blok(cozumle(dosya_oku(yol), yol), alt)
             modul = self.yuklenenler[yol]
             modul.uyeler.update(alt.degerler)
@@ -302,16 +304,31 @@ class Yorumlayici:
         return modul
 
     def kutuphane_yollari(self):
-        """TON ile yazilmis kutuphanelerin arandigi klasorler."""
+        """TON ile yazilmis kutuphanelerin arandigi klasorler, oncelik sirasiyla.
+
+        Once calisan dosyadan yukari dogru `kutuphaneler/` aranir: boylece bir
+        projenin kendi kutuphaneleri, baska bir yere kurulmus TON'un
+        kutuphanelerini golgeler.
+        """
         yollar = []
         cevre = os.environ.get("TON_YOL")
         if cevre:
             yollar += [y for y in cevre.split(os.pathsep) if y]
-        yollar.append(os.path.join(self.kok, "kutuphaneler"))
+        klasor = self.kok
+        while True:
+            yollar.append(os.path.join(klasor, "kutuphaneler"))
+            ust = os.path.dirname(klasor)
+            if ust == klasor:
+                break
+            klasor = ust
         paket_koku = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         yollar.append(os.path.join(paket_koku, "kutuphaneler"))
         yollar.append(os.path.join(os.path.expanduser("~"), ".ton", "kutuphaneler"))
-        return yollar
+        gorulen = []
+        for y in yollar:
+            if y not in gorulen:
+                gorulen.append(y)
+        return gorulen
 
     def ton_kutuphanesi_bul(self, ad):
         for klasor in self.kutuphane_yollari():
