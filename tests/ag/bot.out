@@ -1,0 +1,6 @@
+atlandi: merhaba
+dur komutu geldi
+bot durdu
+REST POST /api/bot/guilds/7/channels/9/messages {"content":"Selam <@42>!"}
+REST POST /api/bot/guilds/7/channels/9/messages {"content":"toplam 42"}
+REST POST /api/bot/guilds/7/channels/9/messages {"embeds":[{"title":"Kutu","description":"govde","color":3108845}]}

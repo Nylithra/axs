@@ -210,6 +210,11 @@
 
   T.uye = function (nesne, ad) {
     var t = T.tur(nesne);
+    // Kutuphane/baglanti nesneleri: kendi uyeleri hazir yontemleri golgeler
+    if (nesne && nesne.__alan) {
+      if (Object.prototype.hasOwnProperty.call(nesne, ad)) return nesne[ad];
+      throw TonHata("baglanti uzerinde '" + ad + "' yok");
+    }
     var tablo = YONTEMLER[t];
     if (tablo && tablo[ad]) return bagla(tablo[ad], nesne, ad);
     if (harita_mi(nesne)) {
@@ -909,6 +914,121 @@
          });
   kaydet(["encode", "adresle"], ["metin"], function (v) {
     return encodeURIComponent(m(v));
+  });
+
+  // ------------------------------------------------------------------ soket
+  /* connect(wss://...) tarayicida da calisir: cekirdekteki ile ayni arayuz. */
+  function soket_ac(adres) {
+    var WS = global.WebSocket;
+    if (!WS) throw TonHata("Bu ortamda WebSocket yok");
+    var ws = new WS(m(adres));
+    var kuyruk = [];        // gelen mesajlar
+    var bekleyenler = [];   // al() cagrilari
+    var dinleyiciler = [];
+    var kapandi = null;
+    var acilma = new Promise(function (tamam, hatali) {
+      ws.onopen = function () { tamam(true); };
+      ws.onerror = function () {
+        if (!kapandi) hatali(TonHata("Baglanti kurulamadi: " + m(adres)));
+      };
+    });
+
+    function coz(ham) {
+      if (typeof ham !== "string") return ham;
+      var kirp = ham.trim();
+      if (kirp.charAt(0) === "{" || kirp.charAt(0) === "[") {
+        try { return JSON.parse(kirp); } catch (e) { return ham; }
+      }
+      return ham;
+    }
+
+    ws.onmessage = function (olay) {
+      var veri = coz(olay.data);
+      for (var i = 0; i < dinleyiciler.length; i++) {
+        T.cagir(dinleyiciler[i], [veri]).catch(hata_goster);
+      }
+      if (bekleyenler.length) bekleyenler.shift()(veri);
+      else kuyruk.push(veri);
+    };
+    ws.onclose = function (olay) {
+      kapandi = olay.code || 1006;
+      alan.acik = false;
+      alan.open = false;
+      alan.kapanma_kodu = kapandi;
+      while (bekleyenler.length) bekleyenler.shift()(null);
+    };
+
+    // Duz harita: %s%.yolla(...) dogrudan calisir
+    var alan = {
+      adres: m(adres), tur: "soket", acik: true, open: true, kapanma_kodu: null,
+      yolla: yolla, send: yolla,
+      al: al, receive: al,
+      dinle: dinle, listen: dinle,
+      bekle: bekle, wait: bekle,
+      kapat: kapat, close: kapat,
+      durdur: kapat, stop: kapat
+    };
+    Object.keys(alan).forEach(function (k) {
+      if (typeof alan[k] === "function") alan[k].__adlar = [];
+    });
+    // Kendi uyeleri hazir harita yontemlerini golgelesin (cekirdekteki gibi)
+    Object.defineProperty(alan, "__alan", { value: true, enumerable: false });
+
+    async function yolla(mesaj) {
+      await acilma;
+      if (ws.readyState !== 1) throw TonHata("Baglanti kapali");
+      ws.send((harita_mi(mesaj) || Array.isArray(mesaj))
+        ? JSON.stringify(mesaj) : T.metin(mesaj));
+      return true;
+    }
+
+    async function al(zaman_asimi) {
+      await acilma;
+      if (kuyruk.length) return kuyruk.shift();
+      if (kapandi) throw TonHata("Baglanti kapandi (" + kapandi + ")");
+      return await new Promise(function (tamam) {
+        var bitti = false;
+        function ver(v) { if (!bitti) { bitti = true; tamam(v); } }
+        bekleyenler.push(ver);
+        if (zaman_asimi) setTimeout(function () { ver(null); }, zaman_asimi * 1000);
+      });
+    }
+
+    async function dinle(is_) {
+      await acilma;
+      dinleyiciler.push(is_);
+      while (kuyruk.length) {
+        await T.cagir(is_, [kuyruk.shift()]);
+      }
+      return true;
+    }
+
+    async function bekle() {
+      await acilma;
+      return await new Promise(function (tamam) {
+        if (kapandi) return tamam(true);
+        var eski = ws.onclose;
+        ws.onclose = function (o) { eski(o); tamam(true); };
+      });
+    }
+
+    function kapat(kod) {
+      alan.acik = false;
+      alan.open = false;
+      try { ws.close(kod || 1000); } catch (e) { /* zaten kapali */ }
+      return true;
+    }
+
+    return alan;
+  }
+
+  kaydet(["connect", "baglan"], ["adres"], function (adres) {
+    var a = m(adres);
+    if (a.indexOf("ws://") === 0 || a.indexOf("wss://") === 0) {
+      return soket_ac(a);
+    }
+    throw TonHata("Tarayicida connect() sadece ws:// ve wss:// adresleri acar; "
+                  + "HTTP icin get()/post() kullan");
   });
 
   // ------------------------------------------------------------------ es zamanli

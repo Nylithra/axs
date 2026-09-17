@@ -230,9 +230,12 @@ def _veritabani_baglanti(yol):
 
 
 @gomulu("connect", "baglan", yorumlayici=True)
-def baglan(y, adres, tur=None):
+def baglan(y, adres, tur=None, basliklar=None, zaman_asimi=30):
     adres = _metin(adres)
     secim = _metin(tur).lower() if tur else None
+    if secim in ("soket", "ws", "websocket") or adres.startswith(("ws://", "wss://")):
+        from .soket import soket_ac
+        return soket_ac(y, adres, basliklar, zaman_asimi)
     if secim == "http" or (secim is None and adres.startswith(("http://", "https://"))):
         return _http_baglanti(adres)
     if secim in ("db", "veritabani", "sqlite") or adres.endswith((".db", ".sqlite", ".sqlite3")) \

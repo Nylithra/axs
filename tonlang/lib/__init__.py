@@ -76,7 +76,7 @@ def kutuphane_yukle(yorumlayici, ad):
 
 def gomululeri_yukle():
     from . import (ag, cekirdek, dosya, esyamanli, koleksiyon, matematik,  # noqa: F401
-                   meta, metin, veri, zeka)
+                   meta, metin, soket, veri, zeka)
     return dict(KAYIT)
 
 

@@ -361,3 +361,336 @@ func ek_cevap(etkilesim, icerik)
   return _istek("POST", "/webhooks/" + %_ayar.uygulama% + "/" + %etkilesim.token%,
                 _mesaj_govdesi(%icerik%))
 end
+
+# ================================================================ gateway
+# Gercek zamanli olaylar. WebSocket uzerinden calisir.
+#
+#   jubb.dinle("mesaj", mesaj_gelince)
+#   jubb.calistir(["sunucular", "mesajlar", "icerik"])
+
+_ag = {
+  adres: "wss://realtime.jubbio.com/ws/bot",
+  soket: null,
+  sira: null,
+  oturum: null,
+  aralik: 30,
+  calisiyor: false,
+  ben: null,
+  kayit: false,
+  deneme: 0,
+  en_fazla_deneme: 10
+}
+
+_dinleyiciler = {}
+
+# TON adi -> gateway olay adi
+_OLAYLAR = {
+  hazir: "READY",
+  mesaj: "MESSAGE_CREATE",
+  mesaj_duzenlendi: "MESSAGE_UPDATE",
+  mesaj_silindi: "MESSAGE_DELETE",
+  mesajlar_silindi: "MESSAGE_DELETE_BULK",
+  komut: "INTERACTION_CREATE",
+  etkilesim: "INTERACTION_CREATE",
+  sunucu_eklendi: "GUILD_CREATE",
+  sunucu_guncellendi: "GUILD_UPDATE",
+  sunucu_silindi: "GUILD_DELETE",
+  uye_katildi: "GUILD_MEMBER_ADD",
+  uye_ayrildi: "GUILD_MEMBER_REMOVE",
+  uye_guncellendi: "GUILD_MEMBER_UPDATE",
+  yasaklandi: "GUILD_BAN_ADD",
+  yasak_kalkti: "GUILD_BAN_REMOVE",
+  kanal_acildi: "CHANNEL_CREATE",
+  kanal_guncellendi: "CHANNEL_UPDATE",
+  kanal_silindi: "CHANNEL_DELETE",
+  rol_acildi: "GUILD_ROLE_CREATE",
+  rol_guncellendi: "GUILD_ROLE_UPDATE",
+  rol_silindi: "GUILD_ROLE_DELETE",
+  yaziyor: "TYPING_START",
+  durum: "PRESENCE_UPDATE",
+  davet: "INVITE_CREATE",
+  ses: "VOICE_STATE_UPDATE",
+  kapandi: "_KAPANDI",
+  hata: "_HATA",
+  ham: "_HAM"
+}
+
+_INTENTLER = {
+  sunucular: 1,
+  uyeler: 2,
+  denetim: 4,
+  emojiler: 8,
+  entegrasyonlar: 16,
+  webhooklar: 32,
+  davetler: 64,
+  sesler: 128,
+  durumlar: 256,
+  mesajlar: 512,
+  tepkiler: 1024,
+  yaziyor: 2048,
+  dm: 4096,
+  dm_tepkileri: 8192,
+  dm_yaziyor: 16384,
+  icerik: 32768,
+  etkinlikler: 65536
+}
+
+# Bir olayi dinlemeye basla
+func dinle(olay, is_)
+  ad = al(%_OLAYLAR%, %olay%, "")
+  if %ad% == ""
+    ad = upper(%olay%)
+  end
+  if not has(%_dinleyiciler%, %ad%)
+    %_dinleyiciler%[%ad%] = []
+  end
+  ekle(%_dinleyiciler%[%ad%], %is_%)
+  return true
+end
+
+func olaylar()
+  return keys(%_OLAYLAR%)
+end
+
+func intentler()
+  return %_INTENTLER%
+end
+
+func _intent_hesapla(deger)
+  if %deger% == null
+    return 33281
+  end
+  if type(%deger%) != "liste"
+    return %deger%
+  end
+  # Intent degerleri ikinin kuvvetleri oldugu icin toplamak "veya" ile aynidir
+  toplam = 0
+  for ad in %deger%
+    bit = al(%_INTENTLER%, %ad%, 0)
+    if %bit% == 0
+      hata("Bilinmeyen intent: " + %ad% + " - secenekler: " + join(keys(%_INTENTLER%), ", "))
+    end
+    toplam = %toplam% + %bit%
+  end
+  return %toplam%
+end
+
+func _duyur(ad, veri)
+  isler = al(%_dinleyiciler%, %ad%, [])
+  for is_ in %isler%
+    try
+      is_(%veri%)
+    catch mesaj
+      print: [jubb] dinleyici hatasi (%ad%): %mesaj%
+    end
+  end
+  return len(%isler%)
+end
+
+func _paket_isle(paket)
+  # Sunucu tek cercevede birden cok JSON yollayabiliyor
+  if type(%paket%) == "metin"
+    for satir in split(%paket%, "\n")
+      if trim(%satir%) != ""
+        try
+          _paket_isle(json(%satir%))
+        catch
+          _duyur("_HAM", %satir%)
+        end
+      end
+    end
+    return null
+  end
+  if type(%paket%) != "harita"
+    return null
+  end
+  _duyur("_HAM", %paket%)
+  if has(%paket%, "s")
+    if %paket.s% != null
+      %_ag%.sira = %paket.s%
+    end
+  end
+  op = al(%paket%, "op", -1)
+  if %op% == 0
+    olay = al(%paket%, "t", "")
+    veri = al(%paket%, "d", {})
+    if %olay% == "READY"
+      %_ag%.oturum = al(%veri%, "session_id", null)
+      %_ag%.ben = al(%veri%, "user", null)
+      %_ag%.deneme = 0
+      # uygulama kimligi READY ile geliyorsa elle vermeye gerek yok
+      uygulama = al(%veri%, "application", null)
+      if %uygulama% != null and %_ayar.uygulama% == ""
+        %_ayar%.uygulama = metin(al(%uygulama%, "id", ""))
+      end
+    end
+    if %olay% == "MESSAGE_CREATE"
+      veri = _mesaj_duzelt(%veri%)
+    end
+    _duyur(%olay%, %veri%)
+  elif %op% == 10
+    %_ag%.aralik = al(%paket.d%, "heartbeat_interval", 30000) / 1000
+  elif %op% == 9
+    if %_ag.kayit%
+      print: [jubb] oturum gecersiz, yeniden kimlik gonderiliyor
+    end
+    wait(2)
+    _kimlik_gonder()
+  elif %op% == 7
+    if %_ag.kayit%
+      print: [jubb] sunucu yeniden baglanmamizi istedi
+    end
+    %_ag.soket%.kapat()
+  end
+  return null
+end
+
+# Sunucu yazari bazen ayri alanda yolluyor; tek bicime getirir.
+func _mesaj_duzelt(m)
+  yazar = al(%m%, "author", null)
+  if %yazar% == null
+    yazar = {}
+    %m%.author = %yazar%
+  end
+  if al(%yazar%, "id", null) == null
+    kimlik = al(%m%, "user_id", null)
+    if %kimlik% != null
+      %yazar%.id = %kimlik%
+    end
+  end
+  %m%.kendim = benim_mi(%m%)
+  return %m%
+end
+
+# Mesaj botun kendisinden mi geldi?  (sonsuz donguye girmemek icin)
+func benim_mi(mesaj)
+  if %_ag.ben% == null
+    return false
+  end
+  yazar = al(%mesaj%, "author", null)
+  if %yazar% == null
+    return false
+  end
+  if al(%yazar%, "bot", false)
+    return true
+  end
+  return metin(al(%yazar%, "id", "")) == metin(al(%_ag.ben%, "id", ""))
+end
+
+func _kimlik_gonder()
+  %_ag.soket%.yolla({
+    op: 2,
+    d: {
+      token: "Bot " + %_ayar.token%,
+      intents: %_ag.intents%,
+      shard: [0, 1]
+    }
+  })
+  return true
+end
+
+func _kalp_dongusu()
+  while %_ag.calisiyor%
+    wait(%_ag.aralik%)
+    if %_ag.calisiyor%
+      try
+        %_ag.soket%.yolla({op: 1, d: %_ag.sira%})
+      catch
+        return null
+      end
+    end
+  end
+  return null
+end
+
+# Gateway'e baglanir ve olaylari dinlemeye baslar.
+# intentler: sayi ya da ad listesi -> ["sunucular", "mesajlar", "icerik"]
+func calistir(intentler = null, yeniden_baglan = true)
+  if %_ayar.token% == ""
+    hata("Once jubb.giris(\"BOT_TOKEN\") yazmalisin")
+  end
+  %_ag%.intents = _intent_hesapla(%intentler%)
+  %_ag%.calisiyor = true
+
+  while %_ag.calisiyor%
+    try
+      _bir_oturum()
+    catch mesaj
+      _duyur("_HATA", %mesaj%)
+      if %_ag.kayit%
+        print: [jubb] baglanti hatasi: %mesaj%
+      end
+    end
+    if not %yeniden_baglan%
+      %_ag%.calisiyor = false
+    end
+    if %_ag.calisiyor%
+      %_ag%.deneme += 1
+      if %_ag.deneme% > %_ag.en_fazla_deneme%
+        %_ag%.calisiyor = false
+        hata("Gateway'e " + %_ag.en_fazla_deneme% + " denemede baglanilamadi")
+      end
+      gecikme = enkucuk(30, 2 ^ %_ag.deneme%)
+      if %_ag.kayit%
+        print: [jubb] %gecikme% saniye sonra yeniden baglanilacak (%_ag.deneme%)
+      end
+      wait(%gecikme%)
+    end
+  end
+  return true
+end
+
+func _bir_oturum()
+  if %_ag.kayit%
+    print: [jubb] baglaniliyor: %_ag.adres%
+  end
+  %_ag%.soket = connect(%_ag.adres%)
+
+  # ilk paket Hello olmali
+  ilk = %_ag.soket%.al(30)
+  if %ilk% == null
+    hata("Gateway 30 saniyede Hello yollamadi")
+  end
+  _paket_isle(%ilk%)
+  _kimlik_gonder()
+  asyn(_kalp_dongusu)
+
+  while %_ag.calisiyor%
+    paket = %_ag.soket%.al(60)
+    if %paket% != null
+      _paket_isle(%paket%)
+    end
+  end
+  return true
+end
+
+# Botu durdurur
+func dur()
+  %_ag%.calisiyor = false
+  if %_ag.soket% != null
+    try
+      %_ag.soket%.kapat()
+    catch
+      print: [jubb] soket zaten kapali
+    end
+  end
+  return true
+end
+
+# Botun kendi kullanici bilgisi (READY sonrasi dolar)
+func ben()
+  return %_ag.ben%
+end
+
+func ag_ayarla(adres = "", kayit = null, en_fazla_deneme = null)
+  if %adres% != ""
+    %_ag%.adres = %adres%
+  end
+  if %kayit% != null
+    %_ag%.kayit = %kayit%
+  end
+  if %en_fazla_deneme% != null
+    %_ag%.en_fazla_deneme = %en_fazla_deneme%
+  end
+  return %_ag%
+end

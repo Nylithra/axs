@@ -10,3 +10,6 @@ _gecici/
 # `ton paket` ciktilari (govde dosyalari kalir)
 examples/tarayici/*.html
 !examples/tarayici/*.govde.html
+
+# token dosyalari
+.env

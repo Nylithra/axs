@@ -156,11 +156,15 @@ Konsola yazar; sayfada `id="ton-cikti"` olan bir öge varsa oraya da ekler.
 | Yok | Neden / yerine |
 |---|---|
 | `read` `save` `delete` `files` ... | Tarayıcı dosya sistemine giremez → `get`/`post` |
-| `connect()` | Veritabanı bağlantısı sunucuda kalır → sunucuda uç aç |
+| `connect("veri.db")` | Veritabanı sunucuda kalır → sunucuda uç aç |
+| `env()` | Ortam değişkeni yoktur → değerleri sayfadan geçir |
 | `meta` `define` `get_var` `set_var` | Derlenmiş kodda dinamik ortam yok |
 
 Bunları tarayıcı kodunda kullanırsan **derlerken** anlaşılır bir hata alırsın,
 çalışırken sürpriz olmaz.
+
+`connect(wss://...)` tarayıcıda da çalışır — çekirdekle aynı arayüz
+(`yolla` · `al` · `dinle` · `bekle` · `kapat`).
 
 `ai()` tarayıcıda çalışır ama isteği kendi sunucuna gönderir — anahtarın
 tarayıcıya inmesin diye:

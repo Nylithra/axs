@@ -10,6 +10,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KUTU = os.path.join(KOK, "tests", "cases")
@@ -257,6 +258,98 @@ def jston_testleri():
     return gecen, kalan, False
 
 
+AG_KUTUSU = os.path.join(KOK, "tests", "ag")
+
+# Sahte gateway'in yollayacagi mesajlar ve REST kaydinin eklenecegi testler
+MESAJLAR = {
+    "bot.ton": ["!selam", "!topla 10 20 12", "!kutu", "merhaba", "!dur"],
+    "soket.tarayici.ton": ["!merhaba"],
+}
+REST_KAYDI = {"bot.ton"}
+
+
+def ag_testleri():
+    """Gateway (WebSocket) akisini sahte bir sunucuya karsi dogrular."""
+    if not os.path.isdir(AG_KUTUSU):
+        return 0, [], True
+    sunucu_yolu = os.path.join(AG_KUTUSU, "sahte_gateway.py")
+    if not os.path.isfile(sunucu_yolu):
+        return 0, [], True
+
+    gecen, kalan = 0, []
+    for ad in sorted(os.listdir(AG_KUTUSU)):
+        if not ad.endswith(".ton"):
+            continue
+        beklenen_yol = os.path.join(AG_KUTUSU, ad[:-4] + ".out")
+        if not os.path.exists(beklenen_yol):
+            continue
+        sira = gecen + len(kalan)
+        # Tarayici testleri sabit porta baglanir (env() tarayicida yok)
+        port = 8300 if ad.endswith(".tarayici.ton") else 8210 + sira * 2
+        rest_port = port + 1
+        mesajlar = MESAJLAR.get(ad)
+        sunucu_cevresi = dict(os.environ)
+        if mesajlar:
+            sunucu_cevresi["SAHTE_MESAJLAR"] = json.dumps(mesajlar)
+        sunucu = subprocess.Popen([sys.executable, sunucu_yolu, str(port)],
+                                  stdout=subprocess.PIPE, text=True,
+                                  env=sunucu_cevresi)
+        rest = subprocess.Popen(
+            [sys.executable, TON, os.path.join(AG_KUTUSU, "sahte_rest.ton")],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+            env=dict(os.environ, SAHTE_REST_PORT=str(rest_port)))
+        try:
+            sunucu.stdout.readline()          # "hazir"
+            time.sleep(2.0)                   # REST sunucusu acilsin
+            cevre = dict(os.environ,
+                         SAHTE_GATEWAY="ws://127.0.0.1:%d/ws/bot" % port,
+                         SAHTE_REST="http://127.0.0.1:%d/api" % rest_port)
+            if ad.endswith(".tarayici.ton"):
+                # Ayni dosyayi tarayici calisma zamaninda (node) calistir
+                sys.path.insert(0, KOK)
+                from tonlang.jston import cevir as _bos  # noqa: F401
+                from tonlang.derleyici import dosya_derle
+                import shutil as _shutil
+                node_yolu = _shutil.which("node")
+                if not node_yolu:
+                    continue
+                kod = dosya_derle(os.path.join(AG_KUTUSU, ad))
+                js = os.path.join(AG_KUTUSU, "_gecici.js")
+                with open(js, "w", encoding="utf-8") as f:
+                    f.write(kod)
+                calisma = os.path.join(KOK, "tonweb", "tarayici", "ton.js")
+                try:
+                    p = subprocess.run(
+                        [node_yolu, "-e",
+                         "setTimeout(()=>process.exit(0), 8000);"
+                         "require(%s);require(%s);"
+                         % (json.dumps(calisma), json.dumps(js))],
+                        capture_output=True, text=True, env=cevre, timeout=120)
+                finally:
+                    if os.path.exists(js):
+                        os.remove(js)
+            else:
+                p = subprocess.run([sys.executable, TON, os.path.join(AG_KUTUSU, ad)],
+                                   capture_output=True, text=True, env=cevre,
+                                   timeout=120)
+            bulunan = p.stdout + p.stderr
+            if ad in REST_KAYDI:
+                rest.terminate()
+                bulunan += "".join(
+                    satir for satir in (rest.stdout.read() or "").splitlines(True)
+                    if satir.startswith("REST "))
+        finally:
+            sunucu.terminate()
+            rest.terminate()
+        with open(beklenen_yol, encoding="utf-8") as f:
+            beklenen = f.read()
+        if bulunan == beklenen:
+            gecen += 1
+        else:
+            kalan.append((ad, beklenen.strip()[:200], bulunan.strip()[:200]))
+    return gecen, kalan, False
+
+
 def main():
     argv = sys.argv[1:]
     guncelle = "--guncelle" in argv
@@ -313,9 +406,16 @@ def main():
     for ad, beklenen, bulunan in jkalan:
         print("  KALDI %s\n    node: %s\n    ton : %s" % (ad, beklenen, bulunan))
 
-    toplam_kalan = kalan + len(bkalan) + len(tkalan) + len(jkalan)
+    agecen, akalan, aatlandi = ag_testleri()
+    if not aatlandi:
+        print("\nGateway testleri (WebSocket): %d gecti, %d kaldi"
+              % (agecen, len(akalan)))
+    for ad, beklenen, bulunan in akalan:
+        print("  KALDI %s\n    beklenen: %s\n    bulunan : %s" % (ad, beklenen, bulunan))
+
+    toplam_kalan = kalan + len(bkalan) + len(tkalan) + len(jkalan) + len(akalan)
     print("\n%d gecti, %d kaldi"
-          % (gecen + bgecen + tgecen + jgecen, toplam_kalan))
+          % (gecen + bgecen + tgecen + jgecen + agecen, toplam_kalan))
     return 1 if toplam_kalan else 0
 
 

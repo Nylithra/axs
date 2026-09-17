@@ -1,0 +1,13 @@
+# Testler icin sahte Jubbio REST sunucusu
+use web
+
+func yanki(istek)
+  print: REST %istek.yontem% %istek.yol% %istek.govde%
+  if ends(%istek.yol%, "/channels")
+    return [{id: 1, name: "genel"}]
+  end
+  return {ok: true, id: 999}
+end
+
+web.api("/api/*", yanki)
+web.serve(number(env("SAHTE_REST_PORT", "8195")), sessiz: true)

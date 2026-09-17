@@ -11,9 +11,8 @@ Bu kütüphane **TON ile yazılmıştır** — `kutuphaneler/jubb.ton` dosyasın
 okuyabilir, değiştirebilirsin. Çekirdeğin `request()` işinden başka bir şey
 kullanmaz.
 
-> **Durum:** REST tarafı (mesaj, üye, rol, kanal, komut, etkileşim) hazır.
-> Gerçek zamanlı olay dinleme (gateway) WebSocket ister; çekirdeğe WebSocket
-> eklenince gelecek.
+Hem REST (mesaj yollama, üye/rol/kanal işlemleri) hem de **gateway** (gerçek
+zamanlı olay dinleme) hazır.
 
 ---
 
@@ -109,6 +108,90 @@ jubb.cevap_duzenle(%etkilesim%, "sonuç")     # sonra cevabı yaz
 jubb.ek_cevap(%etkilesim%, "bir de bu")
 ```
 
+## Gerçek zamanlı: gateway
+
+```ton
+use jubb
+
+jubb.giris(env("JUBB_TOKEN"))
+
+func mesaj_geldi(m)
+  if %m.kendim%
+    return null              # kendi mesajımıza cevap vermeyelim
+  end
+  if %m.content% == "!selam"
+    jubb.yolla(%m.guild_id%, %m.channel_id%, "Selam!")
+  end
+end
+
+jubb.dinle("mesaj", mesaj_geldi)
+jubb.calistir(["sunucular", "mesajlar", "icerik"])
+```
+
+`calistir()` bağlanır ve olaylar gelmeye başlar; `Ctrl-C`'ye kadar çalışır.
+Bağlantı koparsa kendi kendine yeniden bağlanır (artan beklemeyle, en fazla
+10 deneme).
+
+### Olaylar
+
+| TON adı | Gateway olayı |
+|---|---|
+| `hazir` | READY — bot bağlandı |
+| `mesaj` | MESSAGE_CREATE |
+| `mesaj_duzenlendi` · `mesaj_silindi` | MESSAGE_UPDATE / DELETE |
+| `komut` · `etkilesim` | INTERACTION_CREATE (slash komutları) |
+| `uye_katildi` · `uye_ayrildi` · `uye_guncellendi` | GUILD_MEMBER_* |
+| `sunucu_eklendi` · `sunucu_guncellendi` · `sunucu_silindi` | GUILD_* |
+| `kanal_acildi` · `kanal_guncellendi` · `kanal_silindi` | CHANNEL_* |
+| `rol_acildi` · `rol_guncellendi` · `rol_silindi` | GUILD_ROLE_* |
+| `yasaklandi` · `yasak_kalkti` | GUILD_BAN_* |
+| `yaziyor` · `durum` · `davet` · `ses` | TYPING_START, PRESENCE_UPDATE, ... |
+| `hata` · `ham` | bağlantı hatası · ham paket (hata ayıklama) |
+
+Hepsini görmek için: `jubb.olaylar()`
+
+Bir olaya birden çok iş bağlayabilirsin; hepsi sırayla çağrılır. Bir
+dinleyicide hata çıkarsa bot durmaz, hata yazılır.
+
+### Intent'ler
+
+Hangi olayları almak istediğini söylersin:
+
+```ton
+jubb.calistir(["sunucular", "mesajlar", "icerik"])
+jubb.calistir(33281)                 # sayı olarak da verebilirsin
+```
+
+`sunucular` `uyeler` `denetim` `emojiler` `entegrasyonlar` `webhooklar`
+`davetler` `sesler` `durumlar` `mesajlar` `tepkiler` `yaziyor` `dm`
+`dm_tepkileri` `dm_yaziyor` `icerik` `etkinlikler`
+
+Hiçbir şey vermezsen varsayılan: sunucular + mesajlar + içerik.
+
+### Bot bilgisi ve durdurma
+
+```ton
+jubb.ben()                # botun kendi kullanıcı bilgisi (READY sonrası)
+jubb.benim_mi(%mesaj%)    # bu mesaj benden mi geldi?
+jubb.dur()                # gateway'i kapat, calistir() geri döner
+```
+
+Her mesajda hazır gelen kolaylık: `%m.kendim%` — bot kendi mesajını görüyorsa
+`true`. **Bunu kontrol etmezsen bot kendi kendine cevap verip sonsuz döngüye
+girer.**
+
+### Ayarlar
+
+```ton
+jubb.ag_ayarla(kayit: true)                        # bağlantı adımlarını yaz
+jubb.ag_ayarla(adres: "ws://127.0.0.1:9000/ws")    # başka gateway
+jubb.ag_ayarla(en_fazla_deneme: 3)
+jubb.calistir(%intentler%, yeniden_baglan: false)  # kopunca yeniden deneme
+```
+
+Slash komutları için uygulama kimliği gerekir — READY paketiyle otomatik
+geliyorsa elle vermene gerek yok.
+
 ## Yardımcılar
 
 ```ton
@@ -131,6 +214,15 @@ end
 
 ```
 Jubbio hatası (401) POST /bot/guilds/7/channels/9/messages: {error: "bad token"}
+```
+
+## Çalışan bot örneği
+
+`examples/bot/` klasöründe çalışır bir bot var:
+
+```bash
+cp examples/bot/.env.ornek examples/bot/.env    # token'ını yaz
+ton examples/bot/bot.ton
 ```
 
 ## Neden `npm install @jubbio/core` çevrilmedi?

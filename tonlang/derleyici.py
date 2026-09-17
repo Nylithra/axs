@@ -64,8 +64,6 @@ TARAYICIDA_YOK = {
     "dosya_var": "dosya isleri cekirdekte calisir",
     "env": "ortam degiskenleri cekirdekte okunur",
     "ortam": "ortam degiskenleri cekirdekte okunur",
-    "connect": "baglanti kurmak cekirdekte calisir",
-    "baglan": "baglanti kurmak cekirdekte calisir",
     "download": "dosya indirmek cekirdekte calisir",
     "indir": "dosya indirmek cekirdekte calisir",
 }

@@ -1,0 +1,155 @@
+# ============================================================
+#  TON ile yazilmis Jubbio botu
+#
+#  1. examples/bot/.env dosyasi olustur:
+#         JUBB_TOKEN=bot_tokenin
+#  2. Calistir:
+#         ton examples/bot/bot.ton
+#  3. Durdurmak icin Ctrl-C
+# ============================================================
+
+use jubb
+
+ONEK = "!"
+
+token = env("JUBB_TOKEN")
+if %token% == ""
+  print: Token bulunamadi.
+  print:
+  print: examples/bot/.env dosyasi olustur ve icine su satiri yaz:
+  print:   JUBB_TOKEN=bot_tokenin
+  print:
+  print: (ornek icin .env.ornek dosyasina bakabilirsin)
+  exit(1)
+end
+
+jubb.giris(%token%, env("JUBB_UYGULAMA"))
+jubb.ag_ayarla(kayit: true)          # baglanti adimlarini ekrana yaz
+
+# --- kendi adresin varsa (test sunucusu vb.) ---
+if env("JUBB_TEMEL") != ""
+  jubb.ayarla(temel: env("JUBB_TEMEL"))
+end
+if env("JUBB_GATEWAY") != ""
+  jubb.ag_ayarla(adres: env("JUBB_GATEWAY"))
+end
+
+# ============================================================
+#  Olaylar
+# ============================================================
+
+func hazir(veri)
+  print:
+  print: ===========================================
+  print:  %veri.user.username% baglandi!
+  print:  Komutlar: %ONEK%selam  %ONEK%zar  %ONEK%ping  %ONEK%sunucu  %ONEK%yardim
+  print: ===========================================
+  print:
+end
+
+func mesaj_geldi(m)
+  # Kendi mesajlarimiza cevap vermeyelim, yoksa sonsuz donguye gireriz
+  if %m.kendim%
+    return null
+  end
+
+  icerik = trim(al(%m%, "content", ""))
+  if not starts(%icerik%, %ONEK%)
+    return null
+  end
+
+  parcalar = split(%icerik%, " ")
+  komut = lower(replace(%parcalar[0]%, %ONEK%, "", 1))
+  kalan = ""
+  if len(%parcalar%) > 1
+    kalan = join(slice(%parcalar%, 1), " ")
+  end
+
+  sunucu = al(%m%, "guild_id", null)
+  kanal = al(%m%, "channel_id", null)
+  yazar = al(%m%, "author", {})
+
+  print: [komut] %komut% <- %(al(%yazar%, "username", "?"))%
+
+  if %komut% == "selam"
+    jubb.yolla(%sunucu%, %kanal%, "Selam " + jubb.bahset(%yazar.id%) + "! Ben TON ile yazildim.")
+
+  elif %komut% == "zar"
+    sayi = random(1, 6)
+    jubb.yolla(%sunucu%, %kanal%, "Zar: **" + %sayi% + "**")
+
+  elif %komut% == "ping"
+    basla = zaman()
+    jubb.yolla(%sunucu%, %kanal%, "Pong!")
+    gecen = round((zaman() - %basla%) * 1000)
+    print:   (istek %gecen% ms surdu)
+
+  elif %komut% == "topla"
+    toplam = 0
+    for parca in split(%kalan%, " ")
+      toplam += number(%parca%, 0)
+    end
+    jubb.yolla(%sunucu%, %kanal%, %kalan% + " = **" + %toplam% + "**")
+
+  elif %komut% == "sunucu"
+    bilgi = jubb.sunucu(%sunucu%)
+    kanallar = jubb.kanallar(%sunucu%)
+    jubb.yolla(%sunucu%, %kanal%, {
+      baslik: al(%bilgi%, "name", "Sunucu"),
+      aciklama: "Kanal sayisi: " + len(%kanallar%),
+      renk: "#2f6fed",
+      alt_yazi: "TON botu"
+    })
+
+  elif %komut% == "yardim"
+    jubb.yolla(%sunucu%, %kanal%, {
+      baslik: "Komutlar",
+      aciklama: %ONEK% + "selam - selam verir\n"
+              + %ONEK% + "zar - zar atar\n"
+              + %ONEK% + "ping - yasiyor mu bakar\n"
+              + %ONEK% + "topla 1 2 3 - toplar\n"
+              + %ONEK% + "sunucu - sunucu bilgisi\n"
+              + %ONEK% + "yardim - bu yazi",
+      renk: "#2f6fed"
+    })
+  end
+  return null
+end
+
+func komut_geldi(etkilesim)
+  veri = al(%etkilesim%, "data", {})
+  ad = al(%veri%, "name", "")
+  print: [slash] /%ad%
+
+  if %ad% == "selam"
+    jubb.cevapla(%etkilesim%, "Selam!")
+  elif %ad% == "zar"
+    jubb.cevapla(%etkilesim%, "Zar: **" + random(1, 6) + "**")
+  else
+    jubb.cevapla(%etkilesim%, "Bu komutu bilmiyorum", gizli: true)
+  end
+  return null
+end
+
+func uye_katildi(veri)
+  kullanici = al(%veri%, "user", {})
+  print: [katildi] %(al(%kullanici%, "username", "?"))%
+end
+
+func baglanti_hatasi(mesaj)
+  print: [hata] %mesaj%
+end
+
+# ============================================================
+#  Baslat
+# ============================================================
+
+jubb.dinle("hazir", hazir)
+jubb.dinle("mesaj", mesaj_geldi)
+jubb.dinle("komut", komut_geldi)
+jubb.dinle("uye_katildi", uye_katildi)
+jubb.dinle("hata", baglanti_hatasi)
+
+print: Gateway'e baglaniliyor...
+
+jubb.calistir(["sunucular", "mesajlar", "icerik", "uyeler"])

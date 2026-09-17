@@ -132,8 +132,33 @@ print(percent(30, 200))
 | `download(adres, dosya)` | Dosya indirir |
 | `encode(metin)` | Adres için güvenli hâle getirir |
 
+`connect()` adrese bakıp doğru bağlantıyı kurar:
+
+| Adres | Ne olur |
+|---|---|
+| `https://...` | HTTP bağlantısı |
+| `wss://...` · `ws://...` | WebSocket |
+| `"veri.db"` | SQLite veritabanı |
+
 HTTP bağlantısı: `.get(yol)` `.post(yol, veri)` `.put` `.patch` `.delete` `.ping()` `.durum` `.adres`
+
 Veritabanı bağlantısı: `.run(sql, degerler)` `.all(sql)` `.one(sql)` `.tables()` `.close()`
+
+WebSocket bağlantısı:
+
+```ton
+s = connect(wss://ornek.com/ws)
+
+%s%.yolla({selam: "dunya"})     # harita/liste JSON olur, metin olduğu gibi gider
+mesaj = %s%.al(5)               # 5 saniye bekle; gelmezse null
+%s%.dinle(gelince)              # arka planda dinle
+%s%.bekle()                     # dinleme bitene kadar bekle
+%s%.kapat()
+print: %(%s%.acik)%
+```
+
+Gelen metin JSON ise harita olarak verilir. Ping/pong kendiliğinden yanıtlanır.
+Tarayıcıda da aynı arayüz çalışır.
 
 ## Eş zamanlı
 
@@ -177,5 +202,28 @@ Ayrıntılar: [zeka.md](zeka.md)
 
 ## Zaman ve diğer
 
-`now(bicim)` · `timestamp()` · `json(metin)` · `tojson(deger, guzel)` ·
-`error(mesaj)` · `exit(kod)` · `show(deger)`
+| İş | Ne yapar |
+|---|---|
+| `now(bicim)` | Şu anki tarih/saat haritası (ya da biçimli metin) |
+| `timestamp()` | Epoch saniye |
+| `tarih(zaman, bicim)` | Zaman damgasını yazıya çevirir; biçim verilmezse ISO 8601 UTC |
+| `env(ad, varsayilan)` | Ortam değişkeni okur |
+| `env_yukle(dosya)` | `.env` dosyası yükler |
+| `json(metin)` · `tojson(deger, guzel)` | JSON okuma / yazma |
+| `error(mesaj)` · `exit(kod)` · `show(deger)` | Hata, çıkış, gösterim |
+
+### `.env` dosyası
+
+Çalıştırdığın dosyanın yanında `.env` varsa **kendiliğinden okunur**:
+
+```
+# .env
+JUBB_TOKEN=gizli_deger
+export API_URL="https://ornek.com"
+```
+
+```ton
+token = env("JUBB_TOKEN")
+```
+
+Gerçek ortam değişkenleri `.env` değerlerini ezer.

@@ -151,7 +151,7 @@ end
 
 ### Bağlantı — `connect()`
 
-İnternet de veritabanı da aynı kelimeyle:
+İnternet, WebSocket ve veritabanı — hepsi aynı kelimeyle:
 
 ```ton
 api = connect(https://api.lanux.online)
@@ -161,6 +161,10 @@ print: %sonuc%
 db = connect("kayitlar.db")
 %db%.run("insert into kisiler values (?, ?)", ["Nyl", 20])
 print: %(%db%.all("select * from kisiler"))%
+
+soket = connect(wss://ornek.com/ws)     # WebSocket
+%soket%.yolla({selam: "dunya"})
+print: %(%soket%.al(5))%
 ```
 
 Tek seferlik: `get(adres)` · `post(adres, %veri%)` · `download(adres, "dosya.zip")`
@@ -364,9 +368,22 @@ jubb.giris("BOT_TOKEN")
 jubb.yolla(%sunucu%, %kanal%, "Merhaba!")
 ```
 
-`jubb` — [Jubbio](https://jubbio.com) bot kütüphanesi (mesaj, üye, rol, kanal,
-komut, etkileşim). TON ile yazılmıştır, açıp okuyabilirsin:
-[docs/jubb.md](docs/jubb.md)
+`jubb` — [Jubbio](https://jubbio.com) bot kütüphanesi: REST (mesaj, üye, rol,
+kanal, komut) **ve** gerçek zamanlı gateway. TON ile yazılmıştır, açıp
+okuyabilirsin: [docs/jubb.md](docs/jubb.md)
+
+```ton
+func mesaj_geldi(m)
+  if %m.content% == "!selam"
+    jubb.yolla(%m.guild_id%, %m.channel_id%, "Selam!")
+  end
+end
+
+jubb.dinle("mesaj", mesaj_geldi)
+jubb.calistir(["sunucular", "mesajlar", "icerik"])
+```
+
+Çalışır bot örneği: [examples/bot/](examples/bot/)
 
 Kendi kütüphaneni `kutuphaneler/` klasörüne ya da `TON_YOL` ile gösterdiğin bir
 klasöre koyarsan `use <ad>` onu da bulur.

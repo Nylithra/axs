@@ -176,10 +176,56 @@ def simdi(bicim=None):
     }
 
 
+# .env dosyasindan okunan degerler (gercek ortam degiskenleri onceliklidir)
+DOSYA_ORTAMI = {}
+
+
+def env_dosyasi_coz(icerik):
+    """.env icerigini haritaya cevirir."""
+    degerler = {}
+    for ham in icerik.splitlines():
+        satir = ham.strip()
+        if not satir or satir.startswith("#"):
+            continue
+        if satir.lower().startswith("export "):
+            satir = satir[7:].strip()
+        if "=" not in satir:
+            continue
+        ad, _, deger = satir.partition("=")
+        ad = ad.strip()
+        deger = deger.strip()
+        if len(deger) >= 2 and deger[0] == deger[-1] and deger[0] in "\"'":
+            deger = deger[1:-1]
+        elif "#" in deger:
+            deger = deger.split("#", 1)[0].strip()
+        if ad:
+            degerler[ad] = deger
+    return degerler
+
+
+@gomulu("env_load", "env_yukle", yorumlayici=True)
+def env_yukle(y, dosya=".env"):
+    """.env dosyasini okur. Gercek ortam degiskenleri yine onceliklidir."""
+    from ..okuma import dosya_oku
+    yol = _metin(dosya)
+    if not os.path.isabs(yol):
+        yol = os.path.join(y.kok, yol)
+    if not os.path.isfile(yol):
+        return {}
+    degerler = env_dosyasi_coz(dosya_oku(yol))
+    DOSYA_ORTAMI.update(degerler)
+    return dict(degerler)
+
+
 @gomulu("env", "ortam")
 def ortam(ad, varsayilan=""):
-    """Ortam degiskenini okur.  token = env("JUBB_TOKEN")"""
-    return os.environ.get(_metin(ad), varsayilan)
+    """Ortam degiskenini okur.  token = env("JUBB_TOKEN")
+
+    Once gercek ortam degiskenlerine, sonra .env dosyasina bakar."""
+    ad = _metin(ad)
+    if ad in os.environ:
+        return os.environ[ad]
+    return DOSYA_ORTAMI.get(ad, varsayilan)
 
 
 @gomulu("date", "tarih")

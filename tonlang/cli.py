@@ -41,6 +41,15 @@ print: %%mesaj%%
 """
 
 
+def _boru_kapandi():
+    """Cikti borusu kapandiginda sessizce cik (head, less ... ile kullanimda)."""
+    try:
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+    except (OSError, ValueError):
+        pass
+
+
 def _hata_yaz(e):
     sys.stderr.write(e.rapor() + "\n" if isinstance(e, TonError) else str(e) + "\n")
 
@@ -68,6 +77,10 @@ def calistir_dosya(yol, argv):
     except RecursionError:
         sys.stderr.write("Calisma hatasi: is kendini cok fazla cagirdi (sonsuz dongu?)\n")
         return 1
+    except BrokenPipeError:
+        # `ton dosya.ton | head` gibi: karsi taraf okumayi birakti
+        _boru_kapandi()
+        return 0
     except KeyboardInterrupt:
         sys.stderr.write("\nDurduruldu.\n")
         return 130
@@ -273,6 +286,9 @@ def main(argv=None):
         y = Yorumlayici(argv=argv[2:])
         try:
             y.calistir_kaynak(argv[1], "<komut>")
+            return 0
+        except BrokenPipeError:
+            _boru_kapandi()
             return 0
         except TonError as e:
             _hata_yaz(e)

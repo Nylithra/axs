@@ -83,6 +83,23 @@ class Yorumlayici:
         self.argv = list(argv or [])
         self.evren.yerel("_dosya", dosya or "")
         self.evren.yerel("_argv", self.argv)
+        self._env_dosyasini_yukle()
+
+    def _env_dosyasini_yukle(self):
+        """Calisan dosyanin yaninda .env varsa kendiliginden okunur."""
+        from .lib.cekirdek import DOSYA_ORTAMI, env_dosyasi_coz
+        from .okuma import dosya_oku
+        bakilacak = []
+        for klasor in (self.kok, os.getcwd()):
+            yol = os.path.join(klasor, ".env")
+            if yol not in bakilacak:
+                bakilacak.append(yol)
+        for yol in bakilacak:
+            if os.path.isfile(yol):
+                try:
+                    DOSYA_ORTAMI.update(env_dosyasi_coz(dosya_oku(yol)))
+                except OSError:
+                    pass
 
     # ------------------------------------------------------------ giris
     def calistir_kaynak(self, kaynak, dosya=None, kapsam=None):
