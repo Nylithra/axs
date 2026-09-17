@@ -1,0 +1,101 @@
+# jubb kutuphanesi: her cagrinin dogru yontem/yol/govde urettigini dogrular.
+# Gercek Jubbio'ya cikmadan, yerel sahte sunucuyla sinanir.
+
+use web
+use jubb
+
+func yanki(istek)
+  return {yontem: %istek.yontem%, yol: %istek.yol%,
+          sorgu: %istek.sorgu%, govde: %istek.govde%}
+end
+
+func yetkisiz(istek)
+  return web.json({error: "bad token"}, 401)
+end
+
+web.api("/yanki/*", yanki)
+web.api("/kizgin/*", yetkisiz)
+web.start(8155)
+wait(0.3)
+
+jubb.giris("GIZLI_TOKEN", "UYG1")
+jubb.ayarla(temel: "http://127.0.0.1:8155/yanki")
+
+func g(cevap)
+  satir = %cevap.yontem% + " " + %cevap.yol%
+  if len(%cevap.sorgu%) > 0
+    satir = %satir% + " ?" + tojson(%cevap.sorgu%)
+  end
+  if %cevap.govde% != ""
+    satir = %satir% + " " + %cevap.govde%
+  end
+  print: %satir%
+end
+
+print: --- mesajlar ---
+g(jubb.yolla(7, 9, "Merhaba!"))
+g(jubb.yolla(7, 9, {baslik: "Basluk", aciklama: "Aciklama", renk: "#2f6fed"}))
+g(jubb.gizli_yolla(7, 9, 42, "sadece sen"))
+g(jubb.dm(3, "ozel"))
+g(jubb.duzenle(7, 9, 100, "yeni"))
+g(jubb.mesaj_sil(7, 9, 100))
+g(jubb.toplu_sil(7, 9, [1, 2]))
+g(jubb.mesajlar(7, 9, 5))
+g(jubb.tepki_ekle(7, 9, 100, "👍"))
+g(jubb.tepki_sil(7, 9, 100, "👍"))
+g(jubb.sabitle(7, 9, 100))
+
+print: --- uyeler ---
+g(jubb.uye(7, 42))
+g(jubb.uyeler(7, 10))
+g(jubb.at(7, 42, "kural ihlali"))
+g(jubb.yasakla(7, 42, "spam", 1))
+g(jubb.yasak_kaldir(7, 42))
+g(jubb.susturma_kaldir(7, 42, "affedildi"))
+# sustur: bitis zamani her calisista degisir, sadece alan adlarina bakiyoruz
+sonuc = jubb.sustur(7, 42, 600, "sakin ol")
+print: %sonuc.yontem% %sonuc.yol% alanlar=%(join(keys(json(%sonuc.govde%)), ","))%
+g(jubb.rol_ver(7, 42, 5))
+g(jubb.rol_al(7, 42, 5))
+g(jubb.uye_duzenle(7, 42, {nick: "yeni ad"}))
+
+print: --- sunucu ---
+g(jubb.sunucu(7))
+g(jubb.kanallar(7))
+g(jubb.kanal_ac(7, {name: "genel"}))
+g(jubb.kanal_sil(7, 9))
+g(jubb.roller(7))
+g(jubb.rol_ac(7, {name: "uye"}))
+g(jubb.rol_sil(7, 5))
+
+print: --- komutlar ---
+g(jubb.komut_ekle({name: "selam", description: "Selam verir"}))
+g(jubb.komut_ekle({name: "selam"}, 7))
+g(jubb.komutlar())
+g(jubb.komutlari_ayarla([{name: "a"}]))
+g(jubb.komut_sil(11, 7))
+
+print: --- etkilesim ---
+etkilesim = {id: 55, token: "TKN"}
+g(jubb.cevapla(%etkilesim%, "cevap"))
+g(jubb.cevapla(%etkilesim%, "gizli cevap", gizli: true))
+g(jubb.dusun(%etkilesim%))
+g(jubb.cevap_duzenle(%etkilesim%, "duzeltildi"))
+g(jubb.ek_cevap(%etkilesim%, "ek"))
+
+print: --- hatalar ---
+jubb.ayarla(temel: "http://127.0.0.1:8155/kizgin")
+try
+  jubb.yolla(7, 9, "olmaz")
+catch m
+  print: %m%
+end
+
+jubb.giris("")
+try
+  jubb.sunucu(7)
+catch m
+  print: %m%
+end
+
+web.stop()

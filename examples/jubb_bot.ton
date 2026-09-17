@@ -1,0 +1,71 @@
+# Jubbio bot ornegi (REST tarafi).
+#   JUBB_TOKEN=... ton examples/jubb_bot.ton
+#   ton examples/jubb_bot.ton BOT_TOKEN UYGULAMA_ID
+#
+# Gercek zamanli olay dinleme (gateway) WebSocket ister; o ayri gelecek.
+# Buradaki her sey bugun calisir.
+
+use jubb
+
+token = al(%_argv%, 0, env("JUBB_TOKEN"))
+if %token% == ""
+  print: Kullanim: ton examples/jubb_bot.ton BOT_TOKEN [UYGULAMA_ID]
+  print: (ya da sunucu/kanal kimliklerini asagidan degistir)
+  exit(0)
+end
+
+uygulama = al(%_argv%, 1, env("JUBB_UYGULAMA"))
+
+# Yerel sahte sunucuyla denemek icin:  JUBB_TEMEL=http://127.0.0.1:8080/api
+temel = env("JUBB_TEMEL")
+if %temel% != ""
+  jubb.ayarla(temel: %temel%)
+end
+
+jubb.giris(%token%, %uygulama%)
+jubb.ayarla(kayit: true)        # her istegi ekrana yaz
+
+SUNUCU = 1
+KANAL = 1
+
+# --- duz mesaj ---
+jubb.yolla(%SUNUCU%, %KANAL%, "Merhaba! Ben TON ile yazildim.")
+
+# --- gomulu (embed) mesaj ---
+jubb.yolla(%SUNUCU%, %KANAL%, {
+  baslik: "TON Dili",
+  aciklama: "Bu mesaji yollayan bot TON ile yazildi.",
+  renk: "#2f6fed",
+  alt_yazi: "tonjubb"
+})
+
+# --- son mesaji oku ---
+son_mesajlar = jubb.mesajlar(%SUNUCU%, %KANAL%, 5)
+print: Son %(len(%son_mesajlar%))% mesaj alindi
+
+# --- sunucu bilgisi ---
+kanallar = jubb.kanallar(%SUNUCU%)
+print: Kanal sayisi: %(len(%kanallar%))%
+
+# --- slash komutu kaydet (uygulama kimligi gerekir) ---
+if %uygulama% != ""
+  jubb.komutlari_ayarla([
+    {name: "selam", description: "Selam verir"},
+    {name: "zar", description: "Zar atar"}
+  ], %SUNUCU%)
+  print: Komutlar kaydedildi
+end
+
+# --- basit bir komut isleyici (gateway gelince dogrudan baglanacak) ---
+func komut_islet(etkilesim)
+  ad = %etkilesim.data.name%
+  if %ad% == "selam"
+    jubb.cevapla(%etkilesim%, "Selam " + jubb.bahset(%etkilesim.user.id%) + "!")
+  elif %ad% == "zar"
+    jubb.cevapla(%etkilesim%, "Zar: " + random(1, 6))
+  else
+    jubb.cevapla(%etkilesim%, "Bilmedigim bir komut", gizli: true)
+  end
+end
+
+print: Hazir.

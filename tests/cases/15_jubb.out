@@ -1,0 +1,47 @@
+TON web sunucusu hazir -> http://localhost:8155  (durdurmak icin Ctrl-C)
+--- mesajlar ---
+POST /yanki/bot/guilds/7/channels/9/messages {"content":"Merhaba!"}
+POST /yanki/bot/guilds/7/channels/9/messages {"embeds":[{"title":"Basluk","description":"Aciklama","color":3108845}]}
+POST /yanki/bot/guilds/7/channels/9/messages {"content":"sadece sen","flags":64,"target_user_id":42}
+POST /yanki/bot/dm/3 {"content":"ozel"}
+PATCH /yanki/bot/guilds/7/channels/9/messages/100 {"content":"yeni"}
+DELETE /yanki/bot/guilds/7/channels/9/messages/100
+POST /yanki/bot/guilds/7/channels/9/messages/bulk-delete {"messages":[1,2]}
+GET /yanki/bot/guilds/7/channels/9/messages ?{"limit":"5"}
+PUT /yanki/bot/guilds/7/channels/9/messages/100/reactions/👍
+DELETE /yanki/bot/guilds/7/channels/9/messages/100/reactions/👍
+PUT /yanki/bot/guilds/7/channels/9/pins/100
+--- uyeler ---
+GET /yanki/bot/guilds/7/members/42
+GET /yanki/bot/guilds/7/members ?{"flat":"true","limit":"10"}
+DELETE /yanki/bot/guilds/7/members/42 ?{"reason":"kural ihlali"}
+PUT /yanki/bot/guilds/7/bans/42 {"reason":"spam","delete_message_days":1}
+DELETE /yanki/bot/guilds/7/bans/42
+POST /yanki/bot/guilds/7/members/42/timeout/clear {"reason":"affedildi"}
+POST /yanki/bot/guilds/7/members/42/timeout alanlar=until,reason
+PUT /yanki/bot/guilds/7/members/42/roles/5
+DELETE /yanki/bot/guilds/7/members/42/roles/5
+PATCH /yanki/bot/guilds/7/members/42 {"nick":"yeni ad"}
+--- sunucu ---
+GET /yanki/bot/guilds/7
+GET /yanki/bot/guilds/7/channels
+POST /yanki/bot/guilds/7/channels {"name":"genel"}
+DELETE /yanki/bot/guilds/7/channels/9
+GET /yanki/bot/guilds/7/roles
+POST /yanki/bot/guilds/7/roles {"name":"uye"}
+DELETE /yanki/bot/guilds/7/roles/5
+--- komutlar ---
+POST /yanki/applications/UYG1/commands {"name":"selam","description":"Selam verir"}
+POST /yanki/applications/UYG1/guilds/7/commands {"name":"selam"}
+GET /yanki/applications/UYG1/commands
+PUT /yanki/applications/UYG1/commands [{"name":"a"}]
+DELETE /yanki/applications/UYG1/guilds/7/commands/11
+--- etkilesim ---
+POST /yanki/interactions/55/TKN/callback {"type":4,"data":{"content":"cevap"}}
+POST /yanki/interactions/55/TKN/callback {"type":4,"data":{"content":"gizli cevap","flags":64}}
+POST /yanki/interactions/55/TKN/callback {"type":5,"data":{}}
+PATCH /yanki/webhooks/UYG1/TKN/messages/@original {"content":"duzeltildi"}
+POST /yanki/webhooks/UYG1/TKN {"content":"ek"}
+--- hatalar ---
+Jubbio hatasi (401) POST /bot/guilds/7/channels/9/messages: {error: "bad token"}
+Once jubb.giris("BOT_TOKEN") yazmalisin

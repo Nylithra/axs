@@ -335,6 +335,7 @@ tonweb/           # web kütüphanesi (use web)
   html.py           HTML üretimi
   tarayici/ton.js   TARAYICI çalışma zamanı (hazır işler + DOM)
   paket.py          tek dosyalık HTML paketleme
+kutuphaneler/     # TON ile yazılmış kütüphaneler (use jubb)
 examples/         # örnekler
 docs/             # dil kılavuzu
 tests/            # test takımı
@@ -350,6 +351,25 @@ tests/            # test takımı
 - [docs/tarayici.md](docs/tarayici.md) — tarayıcıda TON
 - [docs/zeka.md](docs/zeka.md) — yapay zekâ sağlayıcıları
 - [docs/jston.md](docs/jston.md) — JavaScript'ten TON'a çevirme
+- [docs/jubb.md](docs/jubb.md) — Jubbio bot kütüphanesi
+
+## Hazır kütüphaneler
+
+`kutuphaneler/` içindeki TON dosyaları `use <ad>` ile doğrudan yüklenir:
+
+```ton
+use jubb
+
+jubb.giris("BOT_TOKEN")
+jubb.yolla(%sunucu%, %kanal%, "Merhaba!")
+```
+
+`jubb` — [Jubbio](https://jubbio.com) bot kütüphanesi (mesaj, üye, rol, kanal,
+komut, etkileşim). TON ile yazılmıştır, açıp okuyabilirsin:
+[docs/jubb.md](docs/jubb.md)
+
+Kendi kütüphaneni `kutuphaneler/` klasörüne ya da `TON_YOL` ile gösterdiğin bir
+klasöre koyarsan `use <ad>` onu da bulur.
 
 ## JavaScript'ten TON'a
 

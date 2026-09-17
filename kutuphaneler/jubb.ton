@@ -1,0 +1,363 @@
+# jubb - Jubbio bot kutuphanesi
+#
+#   use jubb
+#
+#   jubb.giris("BOT_TOKEN")
+#   jubb.yolla(%sunucu%, %kanal%, "Merhaba!")
+#
+# Bu kutuphane TON ile yazilmistir; acip okuyabilir, degistirebilirsin.
+# Su an REST tarafini kapsar (mesaj, uye, rol, kanal, komut, etkilesim).
+# Gercek zamanli olay dinleme (gateway) WebSocket ister, o ayri gelecek.
+
+_ayar = {
+  temel: "https://gateway.jubbio.com/api/v1",
+  token: "",
+  uygulama: "",
+  kayit: false
+}
+
+# ---------------------------------------------------------------- kurulum
+func giris(token, uygulama = "")
+  %_ayar%.token = %token%
+  if %uygulama% != ""
+    %_ayar%.uygulama = %uygulama%
+  end
+  return true
+end
+
+func ayarla(temel = "", uygulama = "", kayit = null)
+  if %temel% != ""
+    %_ayar%.temel = %temel%
+  end
+  if %uygulama% != ""
+    %_ayar%.uygulama = %uygulama%
+  end
+  if %kayit% != null
+    %_ayar%.kayit = %kayit%
+  end
+  return %_ayar%
+end
+
+func ayar()
+  return %_ayar%
+end
+
+# ---------------------------------------------------------------- istek
+func _istek(yontem, yol, veri = null)
+  if %_ayar.token% == ""
+    hata("Once jubb.giris(\"BOT_TOKEN\") yazmalisin")
+  end
+  adres = %_ayar.temel% + %yol%
+  basliklar = {
+    Authorization: "Bot " + %_ayar.token%,
+    "Content-Type": "application/json"
+  }
+  if %_ayar.kayit%
+    print: [jubb] %yontem% %adres%
+  end
+  cevap = request(%adres%, %yontem%, %veri%, %basliklar%)
+  if not %cevap.basarili%
+    ayrinti = metin(%cevap.veri%)
+    if len(%ayrinti%) > 200
+      ayrinti = kes(%ayrinti%, 0, 200) + "..."
+    end
+    hata("Jubbio hatasi (" + %cevap.durum% + ") " + %yontem% + " " + %yol% + ": " + %ayrinti%)
+  end
+  return %cevap.veri%
+end
+
+func _sunucu_yolu(sunucu)
+  return "/bot/guilds/" + %sunucu%
+end
+
+func _kanal_yolu(sunucu, kanal)
+  return _sunucu_yolu(%sunucu%) + "/channels/" + %kanal%
+end
+
+# Mesaj icerigini API govdesine cevirir.
+# Metin verirsen duz mesaj, harita verirsen gomulu (embed) olur.
+func _mesaj_govdesi(icerik)
+  if type(%icerik%) == "metin"
+    return {content: %icerik%}
+  end
+  if type(%icerik%) != "harita"
+    return {content: metin(%icerik%)}
+  end
+  if has(%icerik%, "content") or has(%icerik%, "embeds")
+    return %icerik%
+  end
+  return {embeds: [gomulu(%icerik%)]}
+end
+
+# ---------------------------------------------------------------- yardimcilar
+# Gomulu (embed) kutusu yapar. Turkce alan adlarini API adlarina cevirir.
+func gomulu(veri)
+  kutu = {}
+  if has(%veri%, "baslik")
+    %kutu%.title = %veri.baslik%
+  end
+  if has(%veri%, "aciklama")
+    %kutu%.description = %veri.aciklama%
+  end
+  if has(%veri%, "renk")
+    %kutu%.color = _renk(%veri.renk%)
+  end
+  if has(%veri%, "resim")
+    %kutu%.image = {url: %veri.resim%}
+  end
+  if has(%veri%, "kucuk_resim")
+    %kutu%.thumbnail = {url: %veri.kucuk_resim%}
+  end
+  if has(%veri%, "alt_yazi")
+    %kutu%.footer = {text: %veri.alt_yazi%}
+  end
+  if has(%veri%, "yazar")
+    %kutu%.author = {name: %veri.yazar%}
+  end
+  if has(%veri%, "adres")
+    %kutu%.url = %veri.adres%
+  end
+  if has(%veri%, "alanlar")
+    %kutu%.fields = %veri.alanlar%
+  end
+  # API adlariyla verilenler oldugu gibi gecer
+  for anahtar, deger in %veri%
+    if not has(%kutu%, %anahtar%)
+      if contains(["title", "description", "color", "image", "thumbnail", "footer", "author", "url", "fields", "timestamp"], %anahtar%)
+        %kutu%[%anahtar%] = %deger%
+      end
+    end
+  end
+  return %kutu%
+end
+
+func _renk(deger)
+  if type(%deger%) == "metin"
+    ham = replace(%deger%, "#", "")
+    return _onaltilik(%ham%)
+  end
+  return %deger%
+end
+
+func _onaltilik(ham)
+  basamaklar = "0123456789abcdef"
+  toplam = 0
+  for harf in lower(%ham%)
+    yer = find(%basamaklar%, %harf%)
+    if %yer% < 0
+      hata("Renk onaltilik olmali: " + %ham%)
+    end
+    toplam = %toplam% * 16 + %yer%
+  end
+  return %toplam%
+end
+
+# <@123> biciminde bahsetme
+func bahset(kullanici)
+  return "<@" + %kullanici% + ">"
+end
+
+# ---------------------------------------------------------------- mesajlar
+func yolla(sunucu, kanal, icerik)
+  return _istek("POST", _kanal_yolu(%sunucu%, %kanal%) + "/messages", _mesaj_govdesi(%icerik%))
+end
+
+# Sadece bir kisinin gordugu mesaj
+func gizli_yolla(sunucu, kanal, kullanici, icerik)
+  govde = _mesaj_govdesi(%icerik%)
+  %govde%.flags = 64
+  %govde%.target_user_id = %kullanici%
+  return _istek("POST", _kanal_yolu(%sunucu%, %kanal%) + "/messages", %govde%)
+end
+
+func dm(kanal, icerik)
+  return _istek("POST", "/bot/dm/" + %kanal%, _mesaj_govdesi(%icerik%))
+end
+
+func duzenle(sunucu, kanal, mesaj, icerik)
+  return _istek("PATCH", _kanal_yolu(%sunucu%, %kanal%) + "/messages/" + %mesaj%,
+                _mesaj_govdesi(%icerik%))
+end
+
+func mesaj_sil(sunucu, kanal, mesaj)
+  return _istek("DELETE", _kanal_yolu(%sunucu%, %kanal%) + "/messages/" + %mesaj%)
+end
+
+func toplu_sil(sunucu, kanal, mesajlar)
+  return _istek("POST", _kanal_yolu(%sunucu%, %kanal%) + "/messages/bulk-delete",
+                {messages: %mesajlar%})
+end
+
+func mesajlar(sunucu, kanal, adet = 50)
+  cevap = _istek("GET", _kanal_yolu(%sunucu%, %kanal%) + "/messages?limit=" + %adet%)
+  if type(%cevap%) == "harita" and has(%cevap%, "messages")
+    return %cevap.messages%
+  end
+  return %cevap%
+end
+
+func tepki_ekle(sunucu, kanal, mesaj, emoji)
+  return _istek("PUT", _kanal_yolu(%sunucu%, %kanal%) + "/messages/" + %mesaj%
+                + "/reactions/" + encode(%emoji%))
+end
+
+func tepki_sil(sunucu, kanal, mesaj, emoji)
+  return _istek("DELETE", _kanal_yolu(%sunucu%, %kanal%) + "/messages/" + %mesaj%
+                + "/reactions/" + encode(%emoji%))
+end
+
+func sabitle(sunucu, kanal, mesaj)
+  return _istek("PUT", _kanal_yolu(%sunucu%, %kanal%) + "/pins/" + %mesaj%)
+end
+
+func sabit_kaldir(sunucu, kanal, mesaj)
+  return _istek("DELETE", _kanal_yolu(%sunucu%, %kanal%) + "/pins/" + %mesaj%)
+end
+
+# ---------------------------------------------------------------- uyeler
+func uye(sunucu, kullanici)
+  return _istek("GET", _sunucu_yolu(%sunucu%) + "/members/" + %kullanici%)
+end
+
+func uyeler(sunucu, adet = 100)
+  return _istek("GET", _sunucu_yolu(%sunucu%) + "/members?flat=true&limit=" + %adet%)
+end
+
+func at(sunucu, kullanici, sebep = "")
+  yol = _sunucu_yolu(%sunucu%) + "/members/" + %kullanici%
+  if %sebep% != ""
+    yol = %yol% + "?reason=" + encode(%sebep%)
+  end
+  return _istek("DELETE", %yol%)
+end
+
+func yasakla(sunucu, kullanici, sebep = "", gun = 0)
+  return _istek("PUT", _sunucu_yolu(%sunucu%) + "/bans/" + %kullanici%,
+                {reason: %sebep%, delete_message_days: %gun%})
+end
+
+func yasak_kaldir(sunucu, kullanici, sebep = "")
+  yol = _sunucu_yolu(%sunucu%) + "/bans/" + %kullanici%
+  if %sebep% != ""
+    yol = %yol% + "?reason=" + encode(%sebep%)
+  end
+  return _istek("DELETE", %yol%)
+end
+
+# saniye kadar susturur
+func sustur(sunucu, kullanici, saniye, sebep = "")
+  bitis = tarih(zaman() + %saniye%)
+  return _istek("POST", _sunucu_yolu(%sunucu%) + "/members/" + %kullanici% + "/timeout",
+                {until: %bitis%, reason: %sebep%})
+end
+
+func susturma_kaldir(sunucu, kullanici, sebep = "")
+  return _istek("POST",
+                _sunucu_yolu(%sunucu%) + "/members/" + %kullanici% + "/timeout/clear",
+                {reason: %sebep%})
+end
+
+func rol_ver(sunucu, kullanici, rol)
+  return _istek("PUT",
+                _sunucu_yolu(%sunucu%) + "/members/" + %kullanici% + "/roles/" + %rol%)
+end
+
+func rol_al(sunucu, kullanici, rol)
+  return _istek("DELETE",
+                _sunucu_yolu(%sunucu%) + "/members/" + %kullanici% + "/roles/" + %rol%)
+end
+
+func uye_duzenle(sunucu, kullanici, veri)
+  return _istek("PATCH", _sunucu_yolu(%sunucu%) + "/members/" + %kullanici%, %veri%)
+end
+
+# ---------------------------------------------------------------- sunucu
+func sunucu(kimlik)
+  return _istek("GET", _sunucu_yolu(%kimlik%))
+end
+
+func kanallar(sunucu)
+  return _istek("GET", _sunucu_yolu(%sunucu%) + "/channels")
+end
+
+func kanal_ac(sunucu, veri)
+  return _istek("POST", _sunucu_yolu(%sunucu%) + "/channels", %veri%)
+end
+
+func kanal_sil(sunucu, kanal)
+  return _istek("DELETE", _kanal_yolu(%sunucu%, %kanal%))
+end
+
+func roller(sunucu)
+  return _istek("GET", _sunucu_yolu(%sunucu%) + "/roles")
+end
+
+func rol_ac(sunucu, veri)
+  return _istek("POST", _sunucu_yolu(%sunucu%) + "/roles", %veri%)
+end
+
+func rol_sil(sunucu, rol)
+  return _istek("DELETE", _sunucu_yolu(%sunucu%) + "/roles/" + %rol%)
+end
+
+# ---------------------------------------------------------------- komutlar
+func _uygulama_yolu(sunucu)
+  if %_ayar.uygulama% == ""
+    hata("Once uygulama kimligini ver: jubb.giris(\"TOKEN\", \"UYGULAMA_ID\")")
+  end
+  yol = "/applications/" + %_ayar.uygulama%
+  if %sunucu% != ""
+    yol = %yol% + "/guilds/" + %sunucu%
+  end
+  return %yol% + "/commands"
+end
+
+func komut_ekle(komut, sunucu = "")
+  return _istek("POST", _uygulama_yolu(%sunucu%), %komut%)
+end
+
+func komutlari_ayarla(komutlar, sunucu = "")
+  return _istek("PUT", _uygulama_yolu(%sunucu%), %komutlar%)
+end
+
+func komutlar(sunucu = "")
+  return _istek("GET", _uygulama_yolu(%sunucu%))
+end
+
+func komut_sil(komut, sunucu = "")
+  return _istek("DELETE", _uygulama_yolu(%sunucu%) + "/" + %komut%)
+end
+
+# ---------------------------------------------------------------- etkilesim
+# Slash komutuna cevap verir.
+func cevapla(etkilesim, icerik, gizli = false)
+  govde = _mesaj_govdesi(%icerik%)
+  if %gizli%
+    %govde%.flags = 64
+  end
+  return _istek("POST",
+                "/interactions/" + %etkilesim.id% + "/" + %etkilesim.token% + "/callback",
+                {type: 4, data: %govde%})
+end
+
+# "dusunuyor..." der, cevabi sonra duzenlersin
+func dusun(etkilesim, gizli = false)
+  govde = {}
+  if %gizli%
+    govde = {flags: 64}
+  end
+  return _istek("POST",
+                "/interactions/" + %etkilesim.id% + "/" + %etkilesim.token% + "/callback",
+                {type: 5, data: %govde%})
+end
+
+func cevap_duzenle(etkilesim, icerik)
+  return _istek("PATCH",
+                "/webhooks/" + %_ayar.uygulama% + "/" + %etkilesim.token% + "/messages/@original",
+                _mesaj_govdesi(%icerik%))
+end
+
+func ek_cevap(etkilesim, icerik)
+  return _istek("POST", "/webhooks/" + %_ayar.uygulama% + "/" + %etkilesim.token%,
+                _mesaj_govdesi(%icerik%))
+end

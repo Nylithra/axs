@@ -2,6 +2,7 @@
 
 import datetime
 import json as _json
+import os
 import random as _random
 import sys
 import time
@@ -173,6 +174,27 @@ def simdi(bicim=None):
         "metin": an.strftime("%Y-%m-%d %H:%M:%S"),
         "zaman": time.time(),
     }
+
+
+@gomulu("env", "ortam")
+def ortam(ad, varsayilan=""):
+    """Ortam degiskenini okur.  token = env("JUBB_TOKEN")"""
+    return os.environ.get(_metin(ad), varsayilan)
+
+
+@gomulu("date", "tarih")
+def tarih(zaman=None, bicim=None):
+    """Zaman damgasini yaziya cevirir.
+
+    tarih()                 -> su an, ISO 8601 (UTC):  2026-09-17T12:00:00Z
+    tarih(%z%)              -> verilen zamani ISO olarak
+    tarih(%z%, "%d.%m.%Y")  -> istedigin bicimde (yerel saat)
+    """
+    an = time.time() if zaman is None else float(zaman)
+    if bicim:
+        return datetime.datetime.fromtimestamp(an).strftime(_metin(bicim))
+    return datetime.datetime.fromtimestamp(an, datetime.timezone.utc).strftime(
+        "%Y-%m-%dT%H:%M:%SZ")
 
 
 @gomulu("timestamp", "zaman")

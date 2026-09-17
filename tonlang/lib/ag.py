@@ -42,7 +42,8 @@ def _istek(yontem, adres, veri=None, basliklar=None, zaman_asimi=None, ham=False
     basliklar = dict(BASLIK, **{k: _metin(v) for k, v in (basliklar or {}).items()})
     if veri is not None:
         if isinstance(veri, (dict, list)):
-            govde = _json.dumps(pythonlastir(veri), ensure_ascii=False).encode("utf-8")
+            govde = _json.dumps(pythonlastir(veri), ensure_ascii=False,
+                                separators=(",", ":")).encode("utf-8")
             basliklar.setdefault("Content-Type", "application/json; charset=utf-8")
         else:
             govde = _metin(veri).encode("utf-8")

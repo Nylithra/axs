@@ -258,7 +258,13 @@ class Yorumlayici:
         if kutuphane is not None:
             kapsam.ata(d.takma or kutuphane.ad, kutuphane)
             return kutuphane
+        # `use jubb` gibi ciplak ad: TON ile yazilmis kutuphanelerde de aranir
+        ad_ile = isinstance(d.kaynak, N.Sabit)
         yol = self.dosya_bul(kaynak)
+        if yol is None and ad_ile:
+            yol = self.ton_kutuphanesi_bul(kaynak)
+            if yol is not None and not d.takma:
+                d = N.Kullan(d.kaynak, kaynak, line=d.line)
         if yol is None:
             raise TonRuntimeError(
                 "'%s' bulunamadi. Kutuphane adi ya da dosya yolu olmali." % kaynak, d.line)
@@ -277,6 +283,26 @@ class Yorumlayici:
                 if not k.startswith("_"):
                     kapsam.ata(k, v)
         return modul
+
+    def kutuphane_yollari(self):
+        """TON ile yazilmis kutuphanelerin arandigi klasorler."""
+        yollar = []
+        cevre = os.environ.get("TON_YOL")
+        if cevre:
+            yollar += [y for y in cevre.split(os.pathsep) if y]
+        yollar.append(os.path.join(self.kok, "kutuphaneler"))
+        paket_koku = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        yollar.append(os.path.join(paket_koku, "kutuphaneler"))
+        yollar.append(os.path.join(os.path.expanduser("~"), ".ton", "kutuphaneler"))
+        return yollar
+
+    def ton_kutuphanesi_bul(self, ad):
+        for klasor in self.kutuphane_yollari():
+            for uzanti in UZANTILAR:
+                aday = os.path.join(klasor, ad + uzanti)
+                if os.path.isfile(aday):
+                    return aday
+        return None
 
     def dosya_bul(self, ad):
         adaylar = []
