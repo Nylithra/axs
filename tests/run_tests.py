@@ -68,6 +68,38 @@ def birim_testleri():
         else:
             kalan.append((kaynak, beklenen, bulunan))
 
+    # Windows'tan gelen dosyalar: BOM, CRLF ve ANSI kodlama
+    import tempfile
+    from tonlang import calistir_dosya
+    from tonlang.okuma import metne_cevir
+
+    dosya_durumlari = [
+        ("bom_crlf", '\ufeff'.encode("utf-8") + 'print: selam\r\n'.encode("utf-8"), "selam"),
+        ("ansi", 'print: Türkçe\r\n'.encode("cp1254"), "Türkçe"),
+        ("duz", 'print: duz\n'.encode("utf-8"), "duz"),
+    ]
+    for ad, baytlar, beklenen in dosya_durumlari:
+        with tempfile.NamedTemporaryFile("wb", suffix=".ton", delete=False) as f:
+            f.write(baytlar)
+            yol = f.name
+        cikti = []
+        try:
+            calistir_dosya(yol, cikti.append)
+            bulunan = "".join(cikti).strip()
+        except TonError as e:
+            bulunan = "HATA: " + e.mesaj
+        finally:
+            os.unlink(yol)
+        if bulunan == beklenen:
+            gecen += 1
+        else:
+            kalan.append((ad, beklenen, bulunan))
+
+    if metne_cevir(b"\xef\xbb\xbfa\r\nb") == "a\nb":
+        gecen += 1
+    else:
+        kalan.append(("metne_cevir", "a\nb", metne_cevir(b"\xef\xbb\xbfa\r\nb")))
+
     # yazim hatalari
     for kaynak in ['if 1\nprint: x', 'func f(\n', 'a = %', 'x = [1,']:
         try:

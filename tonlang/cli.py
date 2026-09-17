@@ -71,10 +71,10 @@ def calistir_dosya(yol, argv):
 
 
 def kontrol(yol):
+    from .okuma import dosya_oku
     from .parser import cozumle
     try:
-        with open(yol, encoding="utf-8") as f:
-            cozumle(f.read(), yol)
+        cozumle(dosya_oku(yol), yol)
     except TonError as e:
         _hata_yaz(e)
         return 1

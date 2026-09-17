@@ -22,8 +22,8 @@ def oku(y, dosya, varsayilan=None):
         if varsayilan is not None:
             return varsayilan
         raise TonRuntimeError("Dosya bulunamadi: %s" % _metin(dosya))
-    with open(yol, encoding="utf-8") as f:
-        return f.read()
+    from ..okuma import dosya_oku
+    return dosya_oku(yol)
 
 
 @gomulu("save", "kaydet", yorumlayici=True)

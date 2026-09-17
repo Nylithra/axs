@@ -1,0 +1,12 @@
+# Windows batch dosyalari CRLF olmali; git bunlara hic dokunmasin
+*.cmd -text
+*.bat -text
+
+# Kabuk betikleri ve calistirici LF olmali (shebang satiri bozulmasin)
+*.sh   text eol=lf
+ton    text eol=lf
+
+# TON kaynaklari ve belgeler
+*.ton  text
+*.md   text
+*.py   text eol=lf

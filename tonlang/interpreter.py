@@ -5,6 +5,7 @@ import sys
 
 from . import nodes as N
 from .errors import TonError, TonNameError, TonRuntimeError, TonTypeError, TonUserError
+from .okuma import dosya_oku
 from .parser import cozumle, cozumle_ifade
 from .values import (Bagli, Gomulu, Gorev, Isim, Islev, cagrilabilir_mi,
                      dogru_mu, gosterim, metin, sayi_mi, tur)
@@ -85,12 +86,13 @@ class Yorumlayici:
 
     # ------------------------------------------------------------ giris
     def calistir_kaynak(self, kaynak, dosya=None, kapsam=None):
+        if "\r" in kaynak:
+            kaynak = kaynak.replace("\r\n", "\n").replace("\r", "\n")
         program = cozumle(kaynak, dosya or self.dosya)
         return self.blok(program, kapsam or self.evren)
 
     def calistir_dosya(self, yol):
-        with open(yol, encoding="utf-8") as f:
-            return self.calistir_kaynak(f.read(), yol)
+        return self.calistir_kaynak(dosya_oku(yol), yol)
 
     # ------------------------------------------------------------ deyimler
     def blok(self, deyimler, kapsam):
@@ -265,8 +267,7 @@ class Yorumlayici:
         else:
             alt = Kapsam(self.evren)
             self.yuklenenler[yol] = Isim(os.path.splitext(os.path.basename(yol))[0], {})
-            with open(yol, encoding="utf-8") as f:
-                self.blok(cozumle(f.read(), yol), alt)
+            self.blok(cozumle(dosya_oku(yol), yol), alt)
             modul = self.yuklenenler[yol]
             modul.uyeler.update(alt.degerler)
         if d.takma:

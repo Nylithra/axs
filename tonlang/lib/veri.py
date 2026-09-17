@@ -47,26 +47,26 @@ def _dosya_akisi(yol):
     def ac():
         if uzanti in (".csv", ".tsv"):
             ayirac = "\t" if uzanti == ".tsv" else ","
-            with open(yol, encoding="utf-8", newline="") as f:
+            with open(yol, encoding="utf-8-sig", newline="") as f:
                 for satir in csv.DictReader(f, delimiter=ayirac):
                     yield {k: _cevir(v) for k, v in satir.items() if k is not None}
         elif uzanti in (".jsonl", ".ndjson"):
-            with open(yol, encoding="utf-8") as f:
+            with open(yol, encoding="utf-8-sig") as f:
                 for satir in f:
                     satir = satir.strip()
                     if satir:
                         yield tonlastir(_json.loads(satir))
         elif uzanti == ".json":
-            with open(yol, encoding="utf-8") as f:
+            with open(yol, encoding="utf-8-sig") as f:
                 veri = tonlastir(_json.load(f))
             if isinstance(veri, list):
                 yield from veri
             else:
                 yield veri
         else:
-            with open(yol, encoding="utf-8") as f:
+            with open(yol, encoding="utf-8-sig") as f:
                 for satir in f:
-                    yield satir.rstrip("\n")
+                    yield satir.rstrip("\n").rstrip("\r")
     return ac
 
 

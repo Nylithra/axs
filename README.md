@@ -17,20 +17,45 @@ merhaba
 
 ## Kurulum
 
+Gereken tek şey **Python 3.8+**. Başka hiçbir paket yok.
+
+### Windows
+
+```bat
+cd C:\Users\adin\Downloads\ton
+install.cmd
+```
+
+`install.cmd` dosyasına çift tıklamak da olur. Sonra **yeni bir komut istemi aç**
+(eski pencere eski PATH'i kullanır) ve dene:
+
+```bat
+ton -s
+ton main.ton
+```
+
+Kurmadan denemek istersen, klasörün içindeyken:
+
+```bat
+ton.cmd main.ton
+```
+
+Python yoksa: `winget install Python.Python.3.12` — ya da
+[python.org/downloads](https://www.python.org/downloads/) (kurulumda
+**"Add python.exe to PATH"** kutusunu işaretle).
+
+### Linux / macOS
+
 ```bash
 git clone https://github.com/nylithra/ton-language
 cd ton-language
 ./ton main.ton
-```
 
-Her yerden çalıştırmak için:
-
-```bash
 ./install.sh          # ~/.local/bin/ton bağlantısı kurar
 ton main.ton
 ```
 
-Gereken tek şey Python 3.8+. Başka hiçbir paket yok.
+> `install.sh` bir kabuk betiğidir, Windows'ta çalışmaz — orada `install.cmd` kullan.
 
 ---
 
@@ -241,7 +266,10 @@ ton -s                # sürüm
 ## Proje yapısı
 
 ```
-ton               # çalıştırıcı  ->  ton main.ton
+ton               # çalıştırıcı (Linux/macOS)  ->  ton main.ton
+ton.cmd           # çalıştırıcı (Windows)     ->  ton main.ton
+install.sh        # kurulum (Linux/macOS)
+install.cmd       # kurulum (Windows)
 tonlang/          # ÇEKIRDEK (tnl core) - hiç ek gereksinim yok
   lexer.py          sözcük çözümleyici
   parser.py         sözdizimi çözümleyici
@@ -260,6 +288,16 @@ tests/            # test takımı
 - [docs/dil.md](docs/dil.md) — tam dil kılavuzu
 - [docs/isler.md](docs/isler.md) — bütün hazır işler
 - [docs/tonweb.md](docs/tonweb.md) — web kütüphanesi
+
+## Windows notları
+
+- **Dosyalarını UTF-8 kaydet.** TON, Not Defteri'nin eklediği görünmez BOM
+  işaretini ve CRLF satır sonlarını kendi temizler; ANSI (cp1254) kaydedilmiş
+  dosyaları da okur. Yine de en temizi UTF-8'dir.
+- **Türkçe karakterler** konsolda düzgün görünür; `ton.cmd` çıktıyı UTF-8'e ayarlar.
+- **`web.serve(8080)`** ilk çalıştığında Windows Güvenlik Duvarı izin sorabilir.
+  Sadece kendi bilgisayarında denemek için `web.serve(8080, adres: "127.0.0.1")` yaz.
+- **PowerShell'de de** `ton main.ton` çalışır, ayrıca bir şey gerekmez.
 
 ## Testler
 
