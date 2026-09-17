@@ -1,0 +1,20 @@
+klasor("_gecici")
+save("_gecici/satis.csv", "urun,adet,tutar\nkalem,3,30\ndefter,1,45\nsilgi,10,20\nkalem,2,20\n")
+
+v = data("_gecici/satis.csv")
+print(%v%.count())
+print(%v%.sum("tutar"), %v%.avg("adet"), %v%.min("tutar"), %v%.max("tutar"))
+print(%v%.group("urun"))
+print(%v%.totals("urun", "tutar"))
+print(%v%.column("urun"))
+print(%v%.top(2, "tutar"))
+print(%v%.filter(func(s) -> %s.tutar% > 25).column("urun"))
+print(%v%.select("urun", "adet").head(2))
+print(%v%.sort("tutar").column("tutar"))
+
+liste_veri = data([{ad: "a", n: 1}, {ad: "b", n: 5}])
+print(%liste_veri%.sum("n"), %liste_veri%.count())
+
+%v%.filter(func(s) -> %s.urun% == "kalem").save("_gecici/kalem.json")
+print(json(read("_gecici/kalem.json")).len())
+delete("_gecici")

@@ -1,0 +1,11 @@
+4
+115 4 20 45
+{kalem: 2, defter: 1, silgi: 1}
+{kalem: 50, defter: 45, silgi: 20}
+["kalem", "defter", "silgi", "kalem"]
+[{urun: "defter", adet: 1, tutar: 45}, {urun: "kalem", adet: 3, tutar: 30}]
+["kalem", "defter"]
+[{urun: "kalem", adet: 3}, {urun: "defter", adet: 1}]
+[20, 20, 30, 45]
+6 2
+2

@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.db
+*.sqlite
+.venv/
+_gecici/
+.DS_Store

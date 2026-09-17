@@ -1,0 +1,16 @@
+# Yapay zeka.  Once anahtari ayarla:
+#   ai_setup(key: "...")   ya da   TON_AI_KEY ortam degiskeni
+
+if not ai_ready()
+  print: Once TON_AI_KEY ayarla ya da ai_setup(key: "...") yaz.
+  exit(0)
+end
+
+cevap = ai("Bir cumleyle TON dilini tanit")
+print: %cevap%
+
+veri = ai_json("Turkiye'nin 3 buyuk sehrini {sehirler: [...]} bicimde ver")
+print: %veri.sehirler%
+
+sohbet = ai_chat([], "Merhaba, adin ne?")
+print: %sohbet.cevap%
