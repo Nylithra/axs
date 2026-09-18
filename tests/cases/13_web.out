@@ -1,4 +1,4 @@
-TON web sunucusu hazir -> http://localhost:8123  (durdurmak icin Ctrl-C)
+Axs web sunucusu hazir -> http://localhost:8123  (durdurmak icin Ctrl-C)
 <h1>Merhaba</h1>
 {ad: "nyl", yol: "/kullanici/nyl"}
 {alinan: {x: 1}, yontem: "POST"}

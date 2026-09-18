@@ -1,0 +1,10 @@
+{
+  "depo": "Nylithra/ton-language",
+  "paketler": {
+    "jubbio": {
+      "dosya": "jubbio.axs",
+      "aciklama": "Jubbio bot kutuphanesi: mesaj, uye, rol, kanal, komut, gateway",
+      "surum": "1.0.0"
+    }
+  }
+}

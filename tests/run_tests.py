@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""TON test kosucusu.
+"""Axs test kosucusu.
 
     python3 tests/run_tests.py            # tum testleri calistir
     python3 tests/run_tests.py --guncelle # beklenen ciktilari yeniden uret
@@ -14,12 +14,12 @@ import time
 
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 KUTU = os.path.join(KOK, "tests", "cases")
-TON = os.path.join(KOK, "ton")
+AXS = os.path.join(KOK, "axs")
 
 
 def durumlar(suzgec=None):
     for ad in sorted(os.listdir(KUTU)):
-        if not ad.endswith(".ton") or ad.endswith("_yardimci.ton"):
+        if not ad.endswith(".axs") or ad.endswith("_yardimci.axs"):
             continue
         if suzgec and suzgec not in ad:
             continue
@@ -27,7 +27,7 @@ def durumlar(suzgec=None):
 
 
 def calistir(ad):
-    p = subprocess.run([sys.executable, TON, os.path.join(KUTU, ad)],
+    p = subprocess.run([sys.executable, AXS, os.path.join(KUTU, ad)],
                        capture_output=True, text=True, timeout=120)
     return p.stdout + p.stderr
 
@@ -35,8 +35,8 @@ def calistir(ad):
 def birim_testleri():
     """Cekirdek davranislarini python tarafindan sinar."""
     sys.path.insert(0, KOK)
-    from tonlang import calistir as ton_calistir
-    from tonlang.errors import TonError, TonSyntaxError
+    from axslang import calistir as ton_calistir
+    from axslang.errors import TonError, TonSyntaxError
 
     gecen, kalan = 0, []
 
@@ -54,12 +54,17 @@ def birim_testleri():
         ('a = 1\nprint: %a%', "1"),
         ('print(1 + 1)', "2"),
         ('print(%yok%)', "HATA: 'yok' adinda bir degisken yok"),
-        ('a = 1\nprint(a)', "HATA: 'a' bir degisken; %a% seklinde yazmalisin"),
+        ('ai = "groq"\nprint: ai;', "groq"),
+        ('a = 1\nprint(a)', "1"),
+        ('a = 1\nprint: a;', "1"),
+        ('kisi = {ad: "Nyl"}\nprint: merhaba kisi.ad;', "merhaba Nyl"),
+        ('print: duz metin', "duz metin"),
+        ('a = 2\nprint: hesap (a + 3);', "hesap 5"),
         ('print(1 / 0)', "HATA: Sifira bolunemez"),
         ('print("a" + 1)', "a1"),
         ('print(1 == 1.0)', "true"),
         ('print("1" == 1)', "false"),
-        ('print(bilinmeyen_is())', "HATA: 'bilinmeyen_is' adinda bir is yok"),
+        ('print(bilinmeyen_is())', "HATA: 'bilinmeyen_is' diye bir sey yok"),
         ('print: %a', "%a"),
         ('print: 50%% indirim', "50% indirim"),
     ]
@@ -72,8 +77,8 @@ def birim_testleri():
 
     # Windows'tan gelen dosyalar: BOM, CRLF ve ANSI kodlama
     import tempfile
-    from tonlang import calistir_dosya
-    from tonlang.okuma import metne_cevir
+    from axslang import calistir_dosya
+    from axslang.okuma import metne_cevir
 
     dosya_durumlari = [
         ("bom_crlf", '\ufeff'.encode("utf-8") + 'print: selam\r\n'.encode("utf-8"), "selam"),
@@ -81,7 +86,7 @@ def birim_testleri():
         ("duz", 'print: duz\n'.encode("utf-8"), "duz"),
     ]
     for ad, baytlar, beklenen in dosya_durumlari:
-        with tempfile.NamedTemporaryFile("wb", suffix=".ton", delete=False) as f:
+        with tempfile.NamedTemporaryFile("wb", suffix=".axs", delete=False) as f:
             f.write(baytlar)
             yol = f.name
         cikti = []
@@ -132,30 +137,30 @@ def tarayici_testleri():
         return 0, [], True
 
     sys.path.insert(0, KOK)
-    from tonlang.derleyici import dosya_derle
-    from tonlang.errors import TonError
+    from axslang.derleyici import dosya_derle
+    from axslang.errors import TonError
 
     gecen, kalan = 0, []
-    calisma_zamani = os.path.join(KOK, "tonweb", "tarayici", "ton.js")
+    calisma_zamani = os.path.join(KOK, "axsweb", "tarayici", "axs.js")
 
-    # 1) isler.json, ton.js ile ayni mi?
+    # 1) isler.json, axs.js ile ayni mi?
     p = subprocess.run(
-        [node, "-e", "require(%s); console.log(JSON.stringify(Object.keys(TON._HAZIR).sort()))"
+        [node, "-e", "require(%s); console.log(JSON.stringify(Object.keys(AXS._HAZIR).sort()))"
          % json.dumps(calisma_zamani)],
         capture_output=True, text=True, timeout=60)
     try:
         canli = json.loads(p.stdout)
     except ValueError:
         canli = None
-    with open(os.path.join(KOK, "tonweb", "tarayici", "isler.json"), encoding="utf-8") as f:
+    with open(os.path.join(KOK, "axsweb", "tarayici", "isler.json"), encoding="utf-8") as f:
         kayitli = json.load(f)
     if canli is not None and canli == kayitli:
         gecen += 1
     else:
-        kalan.append(("isler.json", "ton.js ile ayni", "farkli - yeniden uret"))
+        kalan.append(("isler.json", "axs.js ile ayni", "farkli - yeniden uret"))
 
     # 2) tarayiciya ozgu davranislar
-    from tonlang.derleyici import derle as tarayiciya_derle
+    from axslang.derleyici import derle as tarayiciya_derle
 
     kucuk_testler = [
         # `ai = "groq"` hem degisken hem ayar
@@ -185,7 +190,7 @@ def tarayici_testleri():
     gecici = tempfile.mkdtemp(prefix="ton-js-")
     try:
         for ad in TARAYICI_DURUMLARI:
-            kaynak = os.path.join(KUTU, ad + ".ton")
+            kaynak = os.path.join(KUTU, ad + ".axs")
             try:
                 kod = dosya_derle(kaynak)
             except TonError as e:
@@ -214,9 +219,9 @@ JSTON_KUTUSU = os.path.join(KOK, "tests", "jston")
 
 
 def jston_testleri():
-    """JavaScript programlarini TON'a cevirir ve ayni ciktiyi verdiklerini dogrular.
+    """JavaScript programlarini Axs'e cevirir ve ayni ciktiyi verdiklerini dogrular.
 
-    Olcut: `node x.js` ile `ton x.ton` bayt bayt ayni yazmali."""
+    Olcut: `node x.js` ile `axs x.axs` bayt bayt ayni yazmali."""
     import shutil
     import tempfile
 
@@ -225,8 +230,8 @@ def jston_testleri():
         return 0, [], True
 
     sys.path.insert(0, KOK)
-    from tonlang.errors import TonError
-    from tonlang.jston import dosya_cevir
+    from axslang.errors import TonError
+    from axslang.jston import dosya_cevir
 
     gecen, kalan = 0, []
     gecici = tempfile.mkdtemp(prefix="ton-jston-")
@@ -243,10 +248,10 @@ def jston_testleri():
             except TonError as e:
                 kalan.append((ad, "cevrilmeli", e.rapor()))
                 continue
-            ton_yolu = os.path.join(gecici, ad[:-3] + ".ton")
+            ton_yolu = os.path.join(gecici, os.path.splitext(ad)[0] + ".axs")
             with open(ton_yolu, "w", encoding="utf-8") as f:
                 f.write(kod)
-            p_ton = subprocess.run([sys.executable, TON, ton_yolu],
+            p_ton = subprocess.run([sys.executable, AXS, ton_yolu],
                                    capture_output=True, text=True, timeout=120)
             ton_cikti = p_ton.stdout + p_ton.stderr
             if js_cikti == ton_cikti:
@@ -262,14 +267,14 @@ AG_KUTUSU = os.path.join(KOK, "tests", "ag")
 
 # Sahte gateway'in yollayacagi mesajlar ve REST kaydinin eklenecegi testler
 MESAJLAR = {
-    "bot.ton": ["!selam", "!topla 10 20 12", "!kutu", "merhaba", "!dur"],
-    "soket.tarayici.ton": ["!merhaba"],
-    "slash.ton": [],
-    "panel.ton": [],
+    "bot.axs": ["!selam", "!topla 10 20 12", "!kutu", "merhaba", "!dur"],
+    "soket.tarayici.axs": ["!merhaba"],
+    "slash.axs": [],
+    "panel.axs": [],
 }
 # Sahte gateway'in yollayacagi slash etkilesimleri
 KOMUTLAR = {
-    "panel.ton": [
+    "panel.axs": [
         {"_t": 2, "name": "ayarla"},
         {"_t": 3, "custom_id": "p_kategori", "values": ["200"]},
         {"_t": 3, "custom_id": "p_ac"},
@@ -277,7 +282,7 @@ KOMUTLAR = {
             {"components": [{"custom_id": "konu", "value": "Sorun"}]},
             {"components": [{"custom_id": "aciklama", "value": "Detay"}]}]},
     ],
-    "slash.ton": [
+    "slash.axs": [
         {"name": "selam"},
         {"name": "topla", "options": [{"name": "bir", "type": 4, "value": 15},
                                       {"name": "iki", "type": 4, "value": 27}]},
@@ -286,7 +291,7 @@ KOMUTLAR = {
         {"name": "olmayan"},
     ],
 }
-REST_KAYDI = {"bot.ton", "slash.ton", "panel.ton"}
+REST_KAYDI = {"bot.axs", "slash.axs", "panel.axs"}
 
 
 def ag_testleri():
@@ -299,14 +304,14 @@ def ag_testleri():
 
     gecen, kalan = 0, []
     for ad in sorted(os.listdir(AG_KUTUSU)):
-        if not ad.endswith(".ton"):
+        if not ad.endswith(".axs"):
             continue
-        beklenen_yol = os.path.join(AG_KUTUSU, ad[:-4] + ".out")
+        beklenen_yol = os.path.join(AG_KUTUSU, os.path.splitext(ad)[0] + ".out")
         if not os.path.exists(beklenen_yol):
             continue
         sira = gecen + len(kalan)
         # Tarayici testleri sabit porta baglanir (env() tarayicida yok)
-        port = 8300 if ad.endswith(".tarayici.ton") else 8210 + sira * 2
+        port = 8300 if ad.endswith(".tarayici.axs") else 8210 + sira * 2
         rest_port = port + 1
         mesajlar = MESAJLAR.get(ad)
         sunucu_cevresi = dict(os.environ)
@@ -318,7 +323,7 @@ def ag_testleri():
                                   stdout=subprocess.PIPE, text=True,
                                   env=sunucu_cevresi)
         rest = subprocess.Popen(
-            [sys.executable, TON, os.path.join(AG_KUTUSU, "sahte_rest.ton")],
+            [sys.executable, AXS, os.path.join(AG_KUTUSU, "sahte_rest.axs")],
             stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
             env=dict(os.environ, SAHTE_REST_PORT=str(rest_port)))
         try:
@@ -327,11 +332,11 @@ def ag_testleri():
             cevre = dict(os.environ,
                          SAHTE_GATEWAY="ws://127.0.0.1:%d/ws/bot" % port,
                          SAHTE_REST="http://127.0.0.1:%d/api" % rest_port)
-            if ad.endswith(".tarayici.ton"):
+            if ad.endswith(".tarayici.axs"):
                 # Ayni dosyayi tarayici calisma zamaninda (node) calistir
                 sys.path.insert(0, KOK)
-                from tonlang.jston import cevir as _bos  # noqa: F401
-                from tonlang.derleyici import dosya_derle
+                from axslang.jston import cevir as _bos  # noqa: F401
+                from axslang.derleyici import dosya_derle
                 import shutil as _shutil
                 node_yolu = _shutil.which("node")
                 if not node_yolu:
@@ -340,7 +345,7 @@ def ag_testleri():
                 js = os.path.join(AG_KUTUSU, "_gecici.js")
                 with open(js, "w", encoding="utf-8") as f:
                     f.write(kod)
-                calisma = os.path.join(KOK, "tonweb", "tarayici", "ton.js")
+                calisma = os.path.join(KOK, "axsweb", "tarayici", "axs.js")
                 try:
                     p = subprocess.run(
                         [node_yolu, "-e",
@@ -352,7 +357,7 @@ def ag_testleri():
                     if os.path.exists(js):
                         os.remove(js)
             else:
-                p = subprocess.run([sys.executable, TON, os.path.join(AG_KUTUSU, ad)],
+                p = subprocess.run([sys.executable, AXS, os.path.join(AG_KUTUSU, ad)],
                                    capture_output=True, text=True, env=cevre,
                                    timeout=120)
             bulunan = p.stdout + p.stderr
@@ -381,7 +386,7 @@ def main():
 
     gecen, kalan = 0, 0
     for ad in durumlar(suzgec):
-        beklenen_yol = os.path.join(KUTU, ad[:-4] + ".out")
+        beklenen_yol = os.path.join(KUTU, os.path.splitext(ad)[0] + ".out")
         bulunan = calistir(ad)
         if guncelle:
             with open(beklenen_yol, "w", encoding="utf-8") as f:
@@ -415,7 +420,7 @@ def main():
     if atlandi:
         print("\nTarayici testleri: node bulunamadi, atlandi")
     else:
-        print("\nTarayici testleri (TON -> JavaScript): %d gecti, %d kaldi"
+        print("\nTarayici testleri (Axs -> JavaScript): %d gecti, %d kaldi"
               % (tgecen, len(tkalan)))
     for ad, beklenen, bulunan in tkalan:
         print("  KALDI %s\n    beklenen: %s\n    bulunan : %s" % (ad, beklenen, bulunan))
@@ -424,7 +429,7 @@ def main():
     if jatlandi:
         print("\njston testleri: node bulunamadi, atlandi")
     else:
-        print("\njston testleri (JavaScript -> TON, node ile ayni cikti): "
+        print("\njston testleri (JavaScript -> AXS, node ile ayni cikti): "
               "%d gecti, %d kaldi" % (jgecen, len(jkalan)))
     for ad, beklenen, bulunan in jkalan:
         print("  KALDI %s\n    node: %s\n    ton : %s" % (ad, beklenen, bulunan))

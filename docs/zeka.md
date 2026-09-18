@@ -16,7 +16,7 @@ print: %(ai("Bana bir fıkra anlat"))%
 | `grok` · `xai` | Grok (xAI) | `XAI_API_KEY` | `grok-4.6` |
 | `groq` | Groq | `GROQ_API_KEY` | `openai/gpt-oss-120b` |
 
-`TON_AI_KEY` hepsinde çalışan ortak anahtardır.
+`AXS_AI_KEY` hepsinde çalışan ortak anahtardır.
 
 ---
 

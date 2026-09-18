@@ -67,7 +67,7 @@ Kendi HTML'ine koyacaksan:
 <script src="uygulamam.js"></script>
 ```
 
-`ton.js` dosyası `tonweb/tarayici/ton.js` içindedir.
+`ton.js` dosyası `axsweb/tarayici/ton.js` içindedir.
 
 ---
 

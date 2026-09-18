@@ -1,13 +1,13 @@
 # jubb — Jubbio bot kütüphanesi
 
 ```ton
-use jubb
+use jubbio
 
-jubb.giris("BOT_TOKEN")
-jubb.yolla(%sunucu%, %kanal%, "Merhaba!")
+jubbio.giris("BOT_TOKEN")
+jubbio.yolla(%sunucu%, %kanal%, "Merhaba!")
 ```
 
-Bu kütüphane **TON ile yazılmıştır** — `kutuphaneler/jubb.ton` dosyasını açıp
+Bu kütüphane **TON ile yazılmıştır** — `kutuphaneler/jubbio.ton` dosyasını açıp
 okuyabilir, değiştirebilirsin. Çekirdeğin `request()` işinden başka bir şey
 kullanmaz.
 
@@ -19,19 +19,19 @@ zamanlı olay dinleme) hazır.
 ## Kurulum
 
 ```ton
-jubb.giris("BOT_TOKEN")                  # sadece token
-jubb.giris("BOT_TOKEN", "UYGULAMA_ID")   # slash komutları için uygulama kimliği
+jubbio.giris("BOT_TOKEN")                  # sadece token
+jubbio.giris("BOT_TOKEN", "UYGULAMA_ID")   # slash komutları için uygulama kimliği
 
-jubb.ayarla(kayit: true)                 # her isteği ekrana yaz
-jubb.ayarla(temel: "http://localhost:8080/api/v1")   # başka sunucu
+jubbio.ayarla(kayit: true)                 # her isteği ekrana yaz
+jubbio.ayarla(temel: "http://localhost:8080/api/v1")   # başka sunucu
 ```
 
 ## Mesajlar
 
 ```ton
-jubb.yolla(%sunucu%, %kanal%, "Merhaba!")
+jubbio.yolla(%sunucu%, %kanal%, "Merhaba!")
 
-jubb.yolla(%sunucu%, %kanal%, {
+jubbio.yolla(%sunucu%, %kanal%, {
   baslik: "Başlık",
   aciklama: "Açıklama",
   renk: "#2f6fed",
@@ -39,18 +39,18 @@ jubb.yolla(%sunucu%, %kanal%, {
   alt_yazi: "footer"
 })
 
-jubb.gizli_yolla(%sunucu%, %kanal%, %kullanici%, "sadece sen görüyorsun")
-jubb.dm(%kanal%, "özel mesaj")
+jubbio.gizli_yolla(%sunucu%, %kanal%, %kullanici%, "sadece sen görüyorsun")
+jubbio.dm(%kanal%, "özel mesaj")
 
-jubb.duzenle(%sunucu%, %kanal%, %mesaj%, "yeni içerik")
-jubb.mesaj_sil(%sunucu%, %kanal%, %mesaj%)
-jubb.toplu_sil(%sunucu%, %kanal%, [%m1%, %m2%])
+jubbio.duzenle(%sunucu%, %kanal%, %mesaj%, "yeni içerik")
+jubbio.mesaj_sil(%sunucu%, %kanal%, %mesaj%)
+jubbio.toplu_sil(%sunucu%, %kanal%, [%m1%, %m2%])
 
-mesajlar = jubb.mesajlar(%sunucu%, %kanal%, 20)
+mesajlar = jubbio.mesajlar(%sunucu%, %kanal%, 20)
 
-jubb.tepki_ekle(%sunucu%, %kanal%, %mesaj%, "👍")
-jubb.tepki_sil(%sunucu%, %kanal%, %mesaj%, "👍")
-jubb.sabitle(%sunucu%, %kanal%, %mesaj%)
+jubbio.tepki_ekle(%sunucu%, %kanal%, %mesaj%, "👍")
+jubbio.tepki_sil(%sunucu%, %kanal%, %mesaj%, "👍")
+jubbio.sabitle(%sunucu%, %kanal%, %mesaj%)
 ```
 
 Metin verirsen düz mesaj, harita verirsen gömülü (embed) kutu olur. API'nin
@@ -59,42 +59,42 @@ kendi alan adlarını (`content`, `embeds`) yazarsan olduğu gibi geçer.
 ## Üyeler
 
 ```ton
-jubb.uye(%sunucu%, %kullanici%)
-jubb.uyeler(%sunucu%, 100)
+jubbio.uye(%sunucu%, %kullanici%)
+jubbio.uyeler(%sunucu%, 100)
 
-jubb.at(%sunucu%, %kullanici%, "sebep")              # kick
-jubb.yasakla(%sunucu%, %kullanici%, "sebep", 1)      # ban (1 günlük mesaj siler)
-jubb.yasak_kaldir(%sunucu%, %kullanici%)
-jubb.sustur(%sunucu%, %kullanici%, 600, "sakin ol")  # 600 saniye
-jubb.susturma_kaldir(%sunucu%, %kullanici%)
+jubbio.at(%sunucu%, %kullanici%, "sebep")              # kick
+jubbio.yasakla(%sunucu%, %kullanici%, "sebep", 1)      # ban (1 günlük mesaj siler)
+jubbio.yasak_kaldir(%sunucu%, %kullanici%)
+jubbio.sustur(%sunucu%, %kullanici%, 600, "sakin ol")  # 600 saniye
+jubbio.susturma_kaldir(%sunucu%, %kullanici%)
 
-jubb.rol_ver(%sunucu%, %kullanici%, %rol%)
-jubb.rol_al(%sunucu%, %kullanici%, %rol%)
-jubb.uye_duzenle(%sunucu%, %kullanici%, {nick: "yeni ad"})
+jubbio.rol_ver(%sunucu%, %kullanici%, %rol%)
+jubbio.rol_al(%sunucu%, %kullanici%, %rol%)
+jubbio.uye_duzenle(%sunucu%, %kullanici%, {nick: "yeni ad"})
 ```
 
 ## Sunucu, kanal, rol
 
 ```ton
-jubb.sunucu(%kimlik%)
-jubb.kanallar(%sunucu%)
-jubb.kanal_ac(%sunucu%, {name: "genel"})
-jubb.kanal_sil(%sunucu%, %kanal%)
-jubb.roller(%sunucu%)
-jubb.rol_ac(%sunucu%, {name: "üye"})
-jubb.rol_sil(%sunucu%, %rol%)
+jubbio.sunucu(%kimlik%)
+jubbio.kanallar(%sunucu%)
+jubbio.kanal_ac(%sunucu%, {name: "genel"})
+jubbio.kanal_sil(%sunucu%, %kanal%)
+jubbio.roller(%sunucu%)
+jubbio.rol_ac(%sunucu%, {name: "üye"})
+jubbio.rol_sil(%sunucu%, %rol%)
 ```
 
 ## Slash komutları
 
-Uygulama kimliği gerekir: `jubb.giris(token, uygulama_id)`
+Uygulama kimliği gerekir: `jubbio.giris(token, uygulama_id)`
 
 ```ton
-jubb.komut_ekle({name: "selam", description: "Selam verir"})        # global
-jubb.komut_ekle({name: "selam", description: "..."}, %sunucu%)      # sunucuya özel
-jubb.komutlari_ayarla([{name: "a"}, {name: "b"}], %sunucu%)         # hepsini değiştir
-jubb.komutlar(%sunucu%)
-jubb.komut_sil(%komut%, %sunucu%)
+jubbio.komut_ekle({name: "selam", description: "Selam verir"})        # global
+jubbio.komut_ekle({name: "selam", description: "..."}, %sunucu%)      # sunucuya özel
+jubbio.komutlari_ayarla([{name: "a"}, {name: "b"}], %sunucu%)         # hepsini değiştir
+jubbio.komutlar(%sunucu%)
+jubbio.komut_sil(%komut%, %sunucu%)
 ```
 
 ## Slash komutları
@@ -103,75 +103,75 @@ Komutu tanımla, kaydet, gelen etkileşimi yanıtla:
 
 ```ton
 KOMUTLAR = [
-  jubb.komut("selam", "Selam verir"),
-  jubb.komut("zar", "Zar atar", [
+  jubbio.komut("selam", "Selam verir"),
+  jubbio.komut("zar", "Zar atar", [
     {ad: "yuz", aciklama: "Kac yuzlu", tur: "sayi"}
   ]),
-  jubb.komut("yanki", "Geri soyler", [
+  jubbio.komut("yanki", "Geri soyler", [
     {ad: "metin", aciklama: "Yazi", tur: "metin", zorunlu: true}
   ])
 ]
 
 func hazir(veri)
-  jubb.komutlari_ayarla(%KOMUTLAR%, %SUNUCU%)   # sunucuya özel: anında görünür
+  jubbio.komutlari_ayarla(%KOMUTLAR%, %SUNUCU%)   # sunucuya özel: anında görünür
 end
 
 func slash_geldi(e)
-  ad = jubb.komut_adi(%e%)
-  kisi = jubb.kim(%e%)
+  ad = jubbio.komut_adi(%e%)
+  kisi = jubbio.kim(%e%)
 
   if %ad% == "zar"
-    yuz = jubb.secenek(%e%, "yuz", 6)
-    jubb.cevapla(%e%, "Zar: " + random(1, %yuz%))
+    yuz = jubbio.secenek(%e%, "yuz", 6)
+    jubbio.cevapla(%e%, "Zar: " + random(1, %yuz%))
   end
 end
 
-jubb.dinle("hazir", hazir)
-jubb.dinle("komut", slash_geldi)
+jubbio.dinle("hazir", hazir)
+jubbio.dinle("komut", slash_geldi)
 ```
 
 | İş | Ne yapar |
 |---|---|
-| `jubb.komut(ad, aciklama, secenekler)` | Komut tanımı üretir |
-| `jubb.komut_adi(%e%)` | Hangi komut çağrıldı |
-| `jubb.secenek(%e%, ad, varsayilan)` | Komuta verilen değeri okur |
-| `jubb.kim(%e%)` | Komutu yazan kullanıcı |
+| `jubbio.komut(ad, aciklama, secenekler)` | Komut tanımı üretir |
+| `jubbio.komut_adi(%e%)` | Hangi komut çağrıldı |
+| `jubbio.secenek(%e%, ad, varsayilan)` | Komuta verilen değeri okur |
+| `jubbio.kim(%e%)` | Komutu yazan kullanıcı |
 
 Seçenek türleri: `metin` `sayi` `mantik` `kullanici` `kanal` `rol` `ondalik`
 (`zorunlu: true` ile zorunlu yapılır).
 
 Uygulama kimliği bağlantı sırasında (READY) kendiliğinden gelir; gelmezse
-`jubb.giris(token, uygulama_kimligi)` ile verirsin.
+`jubbio.giris(token, uygulama_kimligi)` ile verirsin.
 
 ## Etkileşime cevap
 
 ```ton
-jubb.cevapla(%etkilesim%, "Merhaba!")
-jubb.cevapla(%etkilesim%, "sadece sen görürsün", gizli: true)
+jubbio.cevapla(%etkilesim%, "Merhaba!")
+jubbio.cevapla(%etkilesim%, "sadece sen görürsün", gizli: true)
 
-jubb.dusun(%etkilesim%)                      # "düşünüyor..." göster
-jubb.cevap_duzenle(%etkilesim%, "sonuç")     # sonra cevabı yaz
-jubb.ek_cevap(%etkilesim%, "bir de bu")
+jubbio.dusun(%etkilesim%)                      # "düşünüyor..." göster
+jubbio.cevap_duzenle(%etkilesim%, "sonuç")     # sonra cevabı yaz
+jubbio.ek_cevap(%etkilesim%, "bir de bu")
 ```
 
 ## Gerçek zamanlı: gateway
 
 ```ton
-use jubb
+use jubbio
 
-jubb.giris(env("JUBB_TOKEN"))
+jubbio.giris(env("JUBB_TOKEN"))
 
 func mesaj_geldi(m)
   if %m.kendim%
     return null              # kendi mesajımıza cevap vermeyelim
   end
   if %m.content% == "!selam"
-    jubb.yolla(%m.guild_id%, %m.channel_id%, "Selam!")
+    jubbio.yolla(%m.guild_id%, %m.channel_id%, "Selam!")
   end
 end
 
-jubb.dinle("mesaj", mesaj_geldi)
-jubb.calistir(["sunucular", "mesajlar", "icerik"])
+jubbio.dinle("mesaj", mesaj_geldi)
+jubbio.calistir(["sunucular", "mesajlar", "icerik"])
 ```
 
 `calistir()` bağlanır ve olaylar gelmeye başlar; `Ctrl-C`'ye kadar çalışır.
@@ -194,7 +194,7 @@ Bağlantı koparsa kendi kendine yeniden bağlanır (artan beklemeyle, en fazla
 | `yaziyor` · `durum` · `davet` · `ses` | TYPING_START, PRESENCE_UPDATE, ... |
 | `hata` · `ham` | bağlantı hatası · ham paket (hata ayıklama) |
 
-Hepsini görmek için: `jubb.olaylar()`
+Hepsini görmek için: `jubbio.olaylar()`
 
 Bir olaya birden çok iş bağlayabilirsin; hepsi sırayla çağrılır. Bir
 dinleyicide hata çıkarsa bot durmaz, hata yazılır.
@@ -204,8 +204,8 @@ dinleyicide hata çıkarsa bot durmaz, hata yazılır.
 Hangi olayları almak istediğini söylersin:
 
 ```ton
-jubb.calistir(["sunucular", "mesajlar", "icerik"])
-jubb.calistir(33281)                 # sayı olarak da verebilirsin
+jubbio.calistir(["sunucular", "mesajlar", "icerik"])
+jubbio.calistir(33281)                 # sayı olarak da verebilirsin
 ```
 
 `sunucular` `uyeler` `denetim` `emojiler` `entegrasyonlar` `webhooklar`
@@ -217,9 +217,9 @@ Hiçbir şey vermezsen varsayılan: sunucular + mesajlar + içerik.
 ### Bot bilgisi ve durdurma
 
 ```ton
-jubb.ben()                # botun kendi kullanıcı bilgisi (READY sonrası)
-jubb.benim_mi(%mesaj%)    # bu mesaj benden mi geldi?
-jubb.dur()                # gateway'i kapat, calistir() geri döner
+jubbio.ben()                # botun kendi kullanıcı bilgisi (READY sonrası)
+jubbio.benim_mi(%mesaj%)    # bu mesaj benden mi geldi?
+jubbio.dur()                # gateway'i kapat, calistir() geri döner
 ```
 
 Her mesajda hazır gelen kolaylık: `%m.kendim%` — bot kendi mesajını görüyorsa
@@ -229,10 +229,10 @@ girer.**
 ### Ayarlar
 
 ```ton
-jubb.ag_ayarla(kayit: true)                        # bağlantı adımlarını yaz
-jubb.ag_ayarla(adres: "ws://127.0.0.1:9000/ws")    # başka gateway
-jubb.ag_ayarla(en_fazla_deneme: 3)
-jubb.calistir(%intentler%, yeniden_baglan: false)  # kopunca yeniden deneme
+jubbio.ag_ayarla(kayit: true)                        # bağlantı adımlarını yaz
+jubbio.ag_ayarla(adres: "ws://127.0.0.1:9000/ws")    # başka gateway
+jubbio.ag_ayarla(en_fazla_deneme: 3)
+jubbio.calistir(%intentler%, yeniden_baglan: false)  # kopunca yeniden deneme
 ```
 
 Slash komutları için uygulama kimliği gerekir — READY paketiyle otomatik
@@ -241,9 +241,9 @@ geliyorsa elle vermene gerek yok.
 ## Yardımcılar
 
 ```ton
-jubb.bahset(%kullanici%)      # <@123>
-jubb.gomulu({baslik: "...", renk: "#ff0000"})   # embed haritası üretir
-jubb.ayar()                   # şu anki ayarlar
+jubbio.bahset(%kullanici%)      # <@123>
+jubbio.gomulu({baslik: "...", renk: "#ff0000"})   # embed haritası üretir
+jubbio.ayar()                   # şu anki ayarlar
 ```
 
 ## Hatalar
@@ -252,7 +252,7 @@ API hata dönerse TON hatası fırlar; `try/catch` ile yakalarsın:
 
 ```ton
 try
-  jubb.yolla(%sunucu%, %kanal%, "deneme")
+  jubbio.yolla(%sunucu%, %kanal%, "deneme")
 catch mesaj
   print: gönderilemedi: %mesaj%
 end

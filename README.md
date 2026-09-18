@@ -241,7 +241,7 @@ print: %(template('Sayın %isim%', {isim: "Nyl"}))%
 
 ---
 
-## tonweb — web kütüphanesi
+## axsweb — web kütüphanesi
 
 ```ton
 use web
@@ -263,7 +263,7 @@ web.serve(8080)
 TON web sunucusu hazır -> http://localhost:8080
 ```
 
-Ayrıntılar: [docs/tonweb.md](docs/tonweb.md)
+Ayrıntılar: [docs/axsweb.md](docs/axsweb.md)
 
 ---
 
@@ -328,13 +328,13 @@ ton               # çalıştırıcı (Linux/macOS)  ->  ton main.ton
 ton.cmd           # çalıştırıcı (Windows)     ->  ton main.ton
 install.sh        # kurulum (Linux/macOS)
 install.cmd       # kurulum (Windows)
-tonlang/          # ÇEKIRDEK (tnl core) - hiç ek gereksinim yok
+axslang/          # ÇEKIRDEK (tnl core) - hiç ek gereksinim yok
   jston/            JavaScript -> TON çevirici
   lexer.py          sözcük çözümleyici
   parser.py         sözdizimi çözümleyici
   interpreter.py    yorumlayıcı
   lib/              hazır işler (metin, liste, dosya, ağ, veri, zekâ, meta...)
-tonweb/           # web kütüphanesi (use web)
+axsweb/           # web kütüphanesi (use web)
   sunucu.py         yollar, istekler, cevaplar
   html.py           HTML üretimi
   tarayici/ton.js   TARAYICI çalışma zamanı (hazır işler + DOM)
@@ -351,41 +351,41 @@ tests/            # test takımı
 
 - [docs/dil.md](docs/dil.md) — tam dil kılavuzu
 - [docs/isler.md](docs/isler.md) — bütün hazır işler
-- [docs/tonweb.md](docs/tonweb.md) — web kütüphanesi
+- [docs/axsweb.md](docs/axsweb.md) — web kütüphanesi
 - [docs/tarayici.md](docs/tarayici.md) — tarayıcıda TON
 - [docs/zeka.md](docs/zeka.md) — yapay zekâ sağlayıcıları
 - [docs/jston.md](docs/jston.md) — JavaScript'ten TON'a çevirme
-- [docs/jubb.md](docs/jubb.md) — Jubbio bot kütüphanesi
+- [docs/jubbio.md](docs/jubbio.md) — Jubbio bot kütüphanesi
 
 ## Hazır kütüphaneler
 
 `kutuphaneler/` içindeki TON dosyaları `use <ad>` ile doğrudan yüklenir:
 
 ```ton
-use jubb
+use jubbio
 
-jubb.giris("BOT_TOKEN")
-jubb.yolla(%sunucu%, %kanal%, "Merhaba!")
+jubbio.giris("BOT_TOKEN")
+jubbio.yolla(%sunucu%, %kanal%, "Merhaba!")
 ```
 
 `jubb` — [Jubbio](https://jubbio.com) bot kütüphanesi: REST (mesaj, üye, rol,
 kanal, komut) **ve** gerçek zamanlı gateway. TON ile yazılmıştır, açıp
-okuyabilirsin: [docs/jubb.md](docs/jubb.md)
+okuyabilirsin: [docs/jubbio.md](docs/jubbio.md)
 
 ```ton
 func mesaj_geldi(m)
   if %m.content% == "!selam"
-    jubb.yolla(%m.guild_id%, %m.channel_id%, "Selam!")
+    jubbio.yolla(%m.guild_id%, %m.channel_id%, "Selam!")
   end
 end
 
-jubb.dinle("mesaj", mesaj_geldi)
-jubb.calistir(["sunucular", "mesajlar", "icerik"])
+jubbio.dinle("mesaj", mesaj_geldi)
+jubbio.calistir(["sunucular", "mesajlar", "icerik"])
 ```
 
 Çalışır bot örneği: [examples/bot/](examples/bot/)
 
-Kendi kütüphaneni `kutuphaneler/` klasörüne ya da `TON_YOL` ile gösterdiğin bir
+Kendi kütüphaneni `kutuphaneler/` klasörüne ya da `AXS_YOL` ile gösterdiğin bir
 klasöre koyarsan `use <ad>` onu da bulur.
 
 ## JavaScript'ten TON'a

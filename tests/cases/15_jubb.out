@@ -1,4 +1,4 @@
-TON web sunucusu hazir -> http://localhost:8155  (durdurmak icin Ctrl-C)
+Axs web sunucusu hazir -> http://localhost:8155  (durdurmak icin Ctrl-C)
 --- mesajlar ---
 POST /yanki/bot/guilds/7/channels/9/messages {"content":"Merhaba!"}
 POST /yanki/bot/guilds/7/channels/9/messages {"embeds":[{"title":"Basluk","description":"Aciklama","color":3108845}]}
@@ -44,4 +44,4 @@ PATCH /yanki/webhooks/UYG1/TKN/messages/@original {"content":"duzeltildi"}
 POST /yanki/webhooks/UYG1/TKN {"content":"ek"}
 --- hatalar ---
 Jubbio hatasi (401) POST /bot/guilds/7/channels/9/messages: {error: "bad token"}
-Once jubb.giris("BOT_TOKEN") yazmalisin
+Once jubbio.giris("BOT_TOKEN") yazmalisin
