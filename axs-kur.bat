@@ -234,15 +234,23 @@ exit /b 0
 ::: # ---------------------------------------------------------------
 ::: Write-Host '  [5/5] Python araniyor...'
 ::: $adaylar = @()
+::: # Microsoft Store kisayollari (%LOCALAPPDATA%\Microsoft\WindowsApps): calisan bir
+::: # Store Python'u olabilir, ama cogunlukla Store'u acan 0 baytlik bir kisayoldur.
+::: # Elemek yerine en sona birakiyoruz: once gercek kurulumlar denensin.
+::: $sondakiler = @()
 ::: foreach ($k in @('py','python','python3')) {
 :::   foreach ($x in @(Get-Command $k -CommandType Application -ErrorAction SilentlyContinue)) {
 :::     if (-not $x -or -not $x.Source) { continue }
-:::     # Microsoft Store kisayolu: calistirinca Store'u acar, Python degildir
+:::     $kisayol = $false
 :::     if ($x.Source -like '*\WindowsApps\*') {
-:::       try { if ((Get-Item -LiteralPath $x.Source).Length -lt 100000) { continue } } catch { continue }
+:::       try { $kisayol = ((Get-Item -LiteralPath $x.Source).Length -lt 100000) } catch { $kisayol = $true }
 :::     }
-:::     if ($k -eq 'py') { $adaylar += ,@($x.Source, @('-3')) }
-:::     $adaylar += ,@($x.Source, @())
+:::     if ($kisayol) {
+:::       $sondakiler += ,@($x.Source, @())
+:::     } else {
+:::       if ($k -eq 'py') { $adaylar += ,@($x.Source, @('-3')) }
+:::       $adaylar += ,@($x.Source, @())
+:::     }
 :::   }
 ::: }
 ::: # PATH'te olmayan ama diskte duran kurulumlar
@@ -257,6 +265,7 @@ exit /b 0
 :::     $adaylar += ,@($f.FullName, @())
 :::   }
 ::: }
+::: $adaylar += $sondakiler
 :::
 ::: $py = $null
 ::: foreach ($a in $adaylar) {
