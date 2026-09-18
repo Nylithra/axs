@@ -1,4 +1,4 @@
 hello op=10 aralik=800
-READY -> ton_bot
+READY -> axs_bot
 MESSAGE_CREATE -> !merhaba
 acik=false

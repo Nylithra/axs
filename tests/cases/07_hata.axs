@@ -40,7 +40,7 @@ end
 print(guvenli_bol(10, 2), guvenli_bol(10, 0))
 
 try
-  print("ton" - 1)
+  print("axs" - 1)
 catch mesaj
   print: mesaj;
 end

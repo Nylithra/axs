@@ -5,12 +5,12 @@ Hepsi her zaman elinin altında — `use` yazmana gerek yok.
 
 Bir işi hem doğrudan hem nokta ile çağırabilirsin:
 
-```ton
-print(upper(%ad%))
-print(%ad%.upper())
+```axs
+print(upper(ad))
+print(ad.upper())
 ```
 
-Bütün listeyi görmek için: `ton isler`
+Bütün listeyi görmek için: `axs isler`
 
 ---
 
@@ -22,8 +22,8 @@ Bütün listeyi görmek için: `ton isler`
 | `write(...)` | `yazdir` | Alt satıra geçmeden yazar |
 | `ask(soru)` | `sor` | Kullanıcıdan cevap alır |
 
-```ton
-print: Merhaba %ad%
+```axs
+print: Merhaba ad;
 print("a", "b")
 ad = ask("Adın ne? ")
 ```
@@ -52,8 +52,8 @@ Türkçeleri: `buyuk` `kucuk` `kirp` `basharf` `ayir` `birlestir` `degistir` `ic
 `ile_baslar` `ile_biter` `bul` `kes` `ters` `satirlar` `adet` `doldur` `esles`
 `eslesenler` `temizle` `karakterler` `kod` `karakter`
 
-```ton
-print(%m%.trim().lower().split(" "))
+```axs
+print(m.trim().lower().split(" "))
 print("a,b".split(","))
 print(join(["a", "b"], "-"))
 print("tel: 0555".matches("[0-9]+"))
@@ -73,17 +73,17 @@ Türkçeleri: `ekle` `cikar_son` `araya_ekle` `sil` `ilk` `son_oge` `benzersiz`
 `map`, `filter`, `each` ve `reduce`: verdiğin iş ikinci bir değer alıyorsa
 sıra numarası da gelir.
 
-```ton
-print(map(["a", "b"], func(oge, sira) -> %sira% + ":" + %oge%))
+```axs
+print(map(["a", "b"], func(oge, sira) -> sira + ":" + oge))
 # -> ["0:a", "1:b"]
 ```
 
-```ton
-ekle(%liste%, 4)
-print(%liste%.sort(tersten: true))
-print(sort(%kisiler%, "yas"))
-print(group(%kisiler%, "sehir"))
-print(map([1, 2, 3], func(x) -> %x% * 2))
+```axs
+ekle(liste, 4)
+print(liste.sort(tersten: true))
+print(sort(kisiler, "yas"))
+print(group(kisiler, "sehir"))
+print(map([1, 2, 3], func(x) -> x * 2))
 ```
 
 ## Harita
@@ -91,10 +91,10 @@ print(map([1, 2, 3], func(x) -> %x% * 2))
 `keys` `values` `items` `has` `al` `set` `remove` `merge`
 (`anahtarlar` `degerler` `ciftler` `var_mi` `al` `koy` `sil` `kaynastir`)
 
-```ton
-print(%kisi%.keys())
-print(%kisi%.get("yas", 0))
-%kisi%.set("sehir", "Ankara")
+```axs
+print(kisi.keys())
+print(kisi.get("yas", 0))
+kisi.set("sehir", "Ankara")
 ```
 
 ## Matematik
@@ -102,7 +102,7 @@ print(%kisi%.get("yas", 0))
 `abs` `round` `floor` `ceil` `sqrt` `pow` `sin` `cos` `tan` `log` `pi`
 `percent` `clamp` `random` `pick` `shuffle`
 
-```ton
+```axs
 print(round(3.14159, 2))
 print(random(1, 6))
 print(percent(30, 200))
@@ -146,15 +146,15 @@ Veritabanı bağlantısı: `.run(sql, degerler)` `.all(sql)` `.one(sql)` `.table
 
 WebSocket bağlantısı:
 
-```ton
+```axs
 s = connect(wss://ornek.com/ws)
 
-%s%.yolla({selam: "dunya"})     # harita/liste JSON olur, metin olduğu gibi gider
-mesaj = %s%.al(5)               # 5 saniye bekle; gelmezse null
-%s%.dinle(gelince)              # arka planda dinle
-%s%.bekle()                     # dinleme bitene kadar bekle
-%s%.kapat()
-print: %(%s%.acik)%
+s.yolla({selam: "dunya"})     # harita/liste JSON olur, metin olduğu gibi gider
+mesaj = s.al(5)               # 5 saniye bekle; gelmezse null
+s.dinle(gelince)              # arka planda dinle
+s.bekle()                     # dinleme bitene kadar bekle
+s.kapat()
+print: (s.acik);
 ```
 
 Gelen metin JSON ise harita olarak verilir. Ping/pong kendiliğinden yanıtlanır.
@@ -222,7 +222,7 @@ JUBB_TOKEN=gizli_deger
 export API_URL="https://ornek.com"
 ```
 
-```ton
+```axs
 token = env("JUBB_TOKEN")
 ```
 

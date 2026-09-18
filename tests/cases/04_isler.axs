@@ -2,7 +2,7 @@ func selamla(ad, selam = "Merhaba")
   return selam + ", " + ad + "!"
 end
 print(selamla("Nyl"))
-print(selamla("TON", "Selam"))
+print(selamla("Axs", "Selam"))
 print(selamla(selam: "Hey", ad: "Dil"))
 
 func faktoriyel(n)

@@ -5,7 +5,7 @@
 
 import re as _re
 
-from ..errors import TonTypeError
+from ..errors import AxsTypeError
 from ..values import metin as _metin, tur as _tur
 from . import gomulu, hem
 
@@ -68,7 +68,7 @@ def icerir(kap, parca):
         return _metin(parca) in kap
     if isinstance(kap, (list, tuple)):
         return parca in kap
-    raise TonTypeError("%s icinde arama yapilamaz" % _tur(kap))
+    raise AxsTypeError("%s icinde arama yapilamaz" % _tur(kap))
 
 
 @hem("metin", "starts", "ile_baslar")

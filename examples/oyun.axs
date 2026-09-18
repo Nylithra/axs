@@ -1,4 +1,4 @@
-# Sayi tahmin oyunu.  Calistir: ton examples/oyun.ton
+# Sayi tahmin oyunu.  Calistir: axs examples/oyun.axs
 
 gizli = random(1, 20)
 hak = 5

@@ -1,6 +1,6 @@
 """JavaScript sozdizimi cozumleyicisi (ES5 + yaygin ES6+ ozellikleri)."""
 
-from ..errors import TonSyntaxError
+from ..errors import AxsSyntaxError
 from .lexer import coz
 
 # ikili islec oncelikleri
@@ -43,7 +43,7 @@ class Parser:
     def hata(self, mesaj, token=None):
         token = token or self.bak()
         gorunen = "dosya sonu" if token.kind == "EOF" else repr(token.value)
-        return TonSyntaxError("%s (bulunan: %s)" % (mesaj, gorunen), token.line, self.dosya)
+        return AxsSyntaxError("%s (bulunan: %s)" % (mesaj, gorunen), token.line, self.dosya)
 
     def isaret(self, *degerler):
         t = self.bak()
@@ -385,7 +385,7 @@ class Parser:
         elif self.isaret("("):
             try:
                 params = self.parametreler()
-            except TonSyntaxError:
+            except AxsSyntaxError:
                 self.i = bas
                 return None
             if not self.isaret("=>"):

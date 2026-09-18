@@ -1,6 +1,6 @@
 """Liste ve harita isleri."""
 
-from ..errors import TonRuntimeError, TonTypeError
+from ..errors import AxsRuntimeError, AxsTypeError
 from ..values import dogru_mu, metin as _metin, sayi_mi, tur as _tur
 from . import gomulu, hem, yontem
 
@@ -14,13 +14,13 @@ def _liste(v, ad="bu is"):
         return list(v.keys())
     if isinstance(v, str):
         return list(v)
-    raise TonTypeError("%s bir liste ister, %s verildi" % (ad, _tur(v)))
+    raise AxsTypeError("%s bir liste ister, %s verildi" % (ad, _tur(v)))
 
 
 @hem("liste", "push", "ekle")
 def ekle(liste, *degerler):
     if not isinstance(liste, list):
-        raise TonTypeError("ekle() bir liste ister, %s verildi" % _tur(liste))
+        raise AxsTypeError("ekle() bir liste ister, %s verildi" % _tur(liste))
     liste.extend(degerler)
     return liste
 
@@ -114,14 +114,14 @@ def _yaygin(degerler):
 @hem("harita", "keys", "anahtarlar")
 def anahtarlar(harita):
     if not isinstance(harita, dict):
-        raise TonTypeError("anahtarlar() bir harita ister, %s verildi" % _tur(harita))
+        raise AxsTypeError("anahtarlar() bir harita ister, %s verildi" % _tur(harita))
     return list(harita.keys())
 
 
 @hem("harita", "values", "degerler")
 def degerler(harita):
     if not isinstance(harita, dict):
-        raise TonTypeError("degerler() bir harita ister, %s verildi" % _tur(harita))
+        raise AxsTypeError("degerler() bir harita ister, %s verildi" % _tur(harita))
     return list(harita.values())
 
 
@@ -174,7 +174,7 @@ def aralik(bas, son=None, adim=1):
         bas, son = 1, bas
     bas, son, adim = int(bas), int(son), int(adim)
     if adim == 0:
-        raise TonRuntimeError("aralik adimi 0 olamaz")
+        raise AxsRuntimeError("aralik adimi 0 olamaz")
     return list(range(bas, son + (1 if adim > 0 else -1), adim))
 
 

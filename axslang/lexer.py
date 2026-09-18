@@ -7,7 +7,7 @@ Bu yuzden cikplak bir ad her zaman bir fonksiyon/anahtar kelimedir,
 
 import re
 
-from .errors import TonSyntaxError
+from .errors import AxsSyntaxError
 
 IDENT = r"[^\W\d]\w*"
 
@@ -89,7 +89,7 @@ def _erisimler(ham, satir):
     while yer < len(ham):
         m = ACC_RE.match(ham, yer)
         if not m:
-            raise TonSyntaxError("Degisken yolu anlasilamadi: %r" % ham, satir)
+            raise AxsSyntaxError("Degisken yolu anlasilamadi: %r" % ham, satir)
         if m.group(1) is not None:
             cikti.append(("attr", m.group(1)))
         else:
@@ -101,7 +101,7 @@ def _erisimler(ham, satir):
             elif re.fullmatch(IDENT, ic or ""):
                 cikti.append(("indexvar", ic))
             else:
-                raise TonSyntaxError(
+                raise AxsSyntaxError(
                     "Kose parantez icinde sadece sayi, \"metin\" veya degisken adi olur: [%s]" % ic,
                     satir,
                 )
@@ -261,7 +261,7 @@ def coz(kaynak, dosya=None):
             if kaynak.startswith(c * 3, i):
                 kapanis = kaynak.find(c * 3, i + 3)
                 if kapanis == -1:
-                    raise TonSyntaxError("Uc tirnak kapatilmamis", satir)
+                    raise AxsSyntaxError("Uc tirnak kapatilmamis", satir)
                 ham = kaynak[i + 3:kapanis]
                 ekle("STR", metin_parcala(ham, satir, c == '"'))
                 satir += ham.count("\n")
@@ -276,11 +276,11 @@ def coz(kaynak, dosya=None):
                     j += 2
                     continue
                 if kaynak[j] == "\n":
-                    raise TonSyntaxError("Metin tirnagi kapatilmamis", satir)
+                    raise AxsSyntaxError("Metin tirnagi kapatilmamis", satir)
                 ham.append(kaynak[j])
                 j += 1
             if j >= n:
-                raise TonSyntaxError("Metin tirnagi kapatilmamis", satir)
+                raise AxsSyntaxError("Metin tirnagi kapatilmamis", satir)
             ekle("STR", metin_parcala("".join(ham), satir, yorumla))
             i = j + 1
             continue
@@ -296,7 +296,7 @@ def coz(kaynak, dosya=None):
         if c == "%":
             m = VAR_RE.match(kaynak, i)
             if not m:
-                raise TonSyntaxError(
+                raise AxsSyntaxError(
                     "Degiskenler %ad% seklinde yazilir. '%' tek basina kullanilamaz "
                     "(kalan icin 'mod' yaz).",
                     satir,
@@ -331,7 +331,7 @@ def coz(kaynak, dosya=None):
                 i += len(op)
                 break
         else:
-            raise TonSyntaxError("Anlasilmayan karakter: %r" % c, satir)
+            raise AxsSyntaxError("Anlasilmayan karakter: %r" % c, satir)
 
     if tokenlar and tokenlar[-1].kind != "NL":
         tokenlar.append(Token("NL", None, satir))

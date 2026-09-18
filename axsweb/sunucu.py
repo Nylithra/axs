@@ -7,10 +7,10 @@ import threading
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
-from axslang.errors import TonError, TonRuntimeError, TonTypeError
+from axslang.errors import AxsError, AxsRuntimeError, AxsTypeError
 from axslang.lib import isim_alani, kutuphane
 from axslang.values import (Gomulu, Isim, cagrilabilir_mi, metin as _metin, pythonlastir,
-                            tonlastir, tur as _tur)
+                            axslastir, tur as _tur)
 
 from . import html as H
 from .surum import SURUM
@@ -51,7 +51,7 @@ class Uygulama:
     # ---------------------------------------------------------- yol ekleme
     def yol_ekle(self, yontem, desen, isle):
         if not cagrilabilir_mi(isle):
-            raise TonTypeError("Yol icin bir is gerekir, %s verildi" % _tur(isle))
+            raise AxsTypeError("Yol icin bir is gerekir, %s verildi" % _tur(isle))
         desen = _metin(desen)
         if not desen.startswith("/"):
             desen = "/" + desen
@@ -157,7 +157,7 @@ def _isleyici_kur(uygulama):
             icerik_turu = (self.headers.get("Content-Type") or "").lower()
             if "json" in icerik_turu and govde.strip():
                 try:
-                    veri = tonlastir(_json.loads(govde))
+                    veri = axslastir(_json.loads(govde))
                 except ValueError:
                     veri = {}
             elif "form-urlencoded" in icerik_turu:
@@ -294,7 +294,7 @@ def yukle(y):
     def dosya_cevap(dosya):
         hedef = _yol(dosya)
         if not os.path.isfile(hedef):
-            raise TonRuntimeError("Dosya bulunamadi: %s" % _metin(dosya))
+            raise AxsRuntimeError("Dosya bulunamadi: %s" % _metin(dosya))
         return _dosya_cevabi(hedef)
 
     def durum_cevap(kod, govde=""):
@@ -315,19 +315,19 @@ def yukle(y):
         from axslang.lib.meta import sablon
         hedef = _yol(dosya)
         if not os.path.isfile(hedef):
-            raise TonRuntimeError("Sablon bulunamadi: %s" % _metin(dosya))
+            raise AxsRuntimeError("Sablon bulunamadi: %s" % _metin(dosya))
         with open(hedef, encoding="utf-8") as f:
             return sablon(y, f.read(), degerler or {})
 
     def baslat(port=8080, adres="0.0.0.0", sessiz=False, arkaplan=False):
         if uygulama.sunucu is not None:
-            raise TonRuntimeError("Sunucu zaten calisiyor")
+            raise AxsRuntimeError("Sunucu zaten calisiyor")
         uygulama.sessiz = bool(sessiz)
         try:
             uygulama.sunucu = ThreadingHTTPServer((_metin(adres), int(port)),
                                                   _isleyici_kur(uygulama))
         except OSError as e:
-            raise TonRuntimeError("Sunucu baslatilamadi (port %s): %s" % (_metin(port), e))
+            raise AxsRuntimeError("Sunucu baslatilamadi (port %s): %s" % (_metin(port), e))
         uygulama.sunucu.daemon_threads = True
         y.cikti("Axs web sunucusu hazir -> http://localhost:%s  (durdurmak icin Ctrl-C)\n"
                 % _metin(port))
@@ -369,30 +369,30 @@ def yukle(y):
 
         def isle(istek):
             return Cevap(icerik, 200, "application/javascript; charset=utf-8")
-        return _ic_yol("GET", yol, isle, "ton_js")
+        return _ic_yol("GET", yol, isle, "axs_js")
 
-    def betik(yol, ton_dosyasi):
-        """Bir .ton dosyasini derleyip JavaScript olarak yayinlar.
+    def betik(yol, axs_dosyasi):
+        """Bir .axs dosyasini derleyip JavaScript olarak yayinlar.
 
         Her istekte yeniden derlenir; dosyayi degistirip sayfayi yenilemen yeter."""
         from .paket import derle as tarayiciya_derle
-        kaynak = _yol(ton_dosyasi)
+        kaynak = _yol(axs_dosyasi)
 
         def isle(istek):
             try:
                 kod = tarayiciya_derle(kaynak)
-            except TonError as e:
+            except AxsError as e:
                 kod = ("AXS.hata_goster({mesaj: %s});"
                        % _json.dumps(e.rapor()))
             return Cevap(kod.encode("utf-8"), 200, "application/javascript; charset=utf-8")
         return _ic_yol("GET", yol, isle, "betik")
 
-    def uygulama_ekle(yol, ton_dosyasi, baslik=None, govde=None, js_yolu=None):
-        """Tarayicida calisan bir TON uygulamasini yayinlar.
+    def uygulama_ekle(yol, axs_dosyasi, baslik=None, govde=None, js_yolu=None):
+        """Tarayicida calisan bir Axs uygulamasini yayinlar.
 
-        web.uygulama("/", "sayac.ton")  ->  sayfa + axs.js + derlenmis kod"""
+        web.uygulama("/", "sayac.axs")  ->  sayfa + axs.js + derlenmis kod"""
         from .paket import sayfa as paket_sayfasi
-        kaynak = _yol(ton_dosyasi)
+        kaynak = _yol(axs_dosyasi)
         ad = os.path.splitext(os.path.basename(kaynak))[0]
         betik_yolu = js_yolu or ("/%s.axs.js" % ad)
         if not any(k["desen"] == "/axs.js" for k in uygulama.yollar):
@@ -403,7 +403,7 @@ def yukle(y):
             try:
                 html = paket_sayfasi(kaynak, baslik=baslik, govde=govde, gomulu=False,
                                      betik_adresi=betik_yolu)
-            except TonError as e:
+            except AxsError as e:
                 html = H.sayfa(baslik="Hata",
                                govde="<h1>Derleme hatasi</h1><pre>%s</pre>"
                                      % H.kacir(e.rapor()))
@@ -425,7 +425,7 @@ def yukle(y):
                 cevap = zeka(y, soru, model=veri.get("model"),
                              kisilik=veri.get("kisilik"),
                              saglayici=veri.get("saglayici"))
-            except TonError as e:
+            except AxsError as e:
                 return json_cevap({"hata": e.mesaj}, 500)
             return json_cevap({"cevap": cevap})
         return _ic_yol("POST", yol, isle, "ai_ucu")

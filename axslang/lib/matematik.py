@@ -2,7 +2,7 @@
 
 import math
 
-from ..errors import TonRuntimeError
+from ..errors import AxsRuntimeError
 from ..values import sayi_mi
 from . import gomulu
 
@@ -40,7 +40,7 @@ def yukari(x):
 def karekok(x):
     x = _s(x, "karekok")
     if x < 0:
-        raise TonRuntimeError("Negatif sayinin karekoku alinamaz")
+        raise AxsRuntimeError("Negatif sayinin karekoku alinamaz")
     return math.sqrt(x)
 
 

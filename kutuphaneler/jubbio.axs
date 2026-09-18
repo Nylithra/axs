@@ -484,7 +484,7 @@ func izni_var(uye, adlar)
   return true
 end
 
-# TON'da bit isleci yok; bolme ile bakiyoruz
+# Axs'te bit isleci yok; bolme ile bakiyoruz
 func _bit_var(deger, bit)
   if bit == 0
     return true
@@ -713,7 +713,7 @@ _ag = {
 
 _dinleyiciler = {}
 
-# TON adi -> gateway olay adi
+# Axs adi -> gateway olay adi
 _OLAYLAR = {
   hazir: "READY",
   mesaj: "MESSAGE_CREATE",

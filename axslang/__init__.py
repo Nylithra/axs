@@ -16,7 +16,7 @@ def calistir(kaynak, dosya=None, cikti=None, argv=None):
 
 
 def calistir_dosya(yol, cikti=None, argv=None):
-    """Bir .ton/.tn/.nyl/.tnl dosyasini calistirir."""
+    """Bir .axs/.nyl dosyasini calistirir."""
     from .interpreter import Yorumlayici
     y = Yorumlayici(yol, cikti, argv)
     return y.calistir_dosya(yol)

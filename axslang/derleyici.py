@@ -13,7 +13,7 @@ import json
 import os
 
 from . import nodes as N
-from .errors import TonError, TonRuntimeError, TonSyntaxError
+from .errors import AxsError, AxsRuntimeError, AxsSyntaxError
 from .okuma import dosya_oku
 from .parser import cozumle, cozumle_ifade
 from .surum import UZANTILAR
@@ -36,7 +36,7 @@ TARAYICIDA_YOK = {
     "kodu_calistir": "kod uretimi cekirdekte calisir",
     "define": "kod uretimi cekirdekte calisir",
     "tanimla": "kod uretimi cekirdekte calisir",
-    "eval_ton": "kod uretimi cekirdekte calisir",
+    "eval_axs": "kod uretimi cekirdekte calisir",
     "degerini_bul": "kod uretimi cekirdekte calisir",
     "get_var": "degiskenlere ad ile erisim cekirdekte calisir",
     "degeri": "degiskenlere ad ile erisim cekirdekte calisir",
@@ -167,13 +167,13 @@ class Derleyici:
             parcalar = [p for p in d.kaynak.parcalar if p[0] == "text"]
             kaynak_adi = "".join(p[1] for p in parcalar)
         if kaynak_adi in ("web", "axsweb"):
-            raise TonSyntaxError(
+            raise AxsSyntaxError(
                 "Tarayici tarafinda 'use web' yoktur; web kutuphanesi sunucu icindir. "
                 "Tarayicida DOM isleri (bul, tikla, yaz_ic ...) zaten hazirdir.",
                 d.line, self.dosya)
         yol = self.dosya_bul(kaynak_adi or "")
         if yol is None:
-            raise TonRuntimeError("'%s' bulunamadi" % kaynak_adi, d.line, self.dosya)
+            raise AxsRuntimeError("'%s' bulunamadi" % kaynak_adi, d.line, self.dosya)
         if yol not in self.onbellek:
             self.onbellek[yol] = cozumle(dosya_oku(yol), yol)
         return yol, self.onbellek[yol]
@@ -257,7 +257,7 @@ class Derleyici:
                        yakala, self.blok(d.yakala_govde, kapsam, girinti + 1), bosluk))
         if t == "Kullan":
             return self.kullan(d, kapsam, girinti)
-        raise TonRuntimeError("Tarayici derleyicisi '%s' deyimini bilmiyor" % t,
+        raise AxsRuntimeError("Tarayici derleyicisi '%s' deyimini bilmiyor" % t,
                               d.line, self.dosya)
 
     def atama(self, d, kapsam, girinti):
@@ -288,7 +288,7 @@ class Derleyici:
                 deger = "T.%s(T.uye(%s, %s), %s)" % (IKILI_ISLER[d.islec[0]],
                                                      nesne, ad, deger)
             return "%sT.ata_uye(%s, %s, %s);\n" % (bosluk, nesne, ad, deger)
-        raise TonSyntaxError("Buraya deger atanamaz", d.line, self.dosya)
+        raise AxsSyntaxError("Buraya deger atanamaz", d.line, self.dosya)
 
     def is_tanimi(self, d, kapsam, girinti, isim_ver=True):
         ic = Kapsam(kapsam, "is")
@@ -388,7 +388,7 @@ class Derleyici:
             if e.ad and not kapsam.var_mi(e.ad):
                 kapsam.bildir(e.ad)
             return "(%s)" % self.is_tanimi(e, kapsam, 1, isim_ver=bool(e.ad))
-        raise TonRuntimeError("Tarayici derleyicisi '%s' ifadesini bilmiyor" % t,
+        raise AxsRuntimeError("Tarayici derleyicisi '%s' ifadesini bilmiyor" % t,
                               e.line, self.dosya)
 
     def ad_coz(self, ad, kapsam, satir, degisken):
@@ -402,12 +402,12 @@ class Derleyici:
         if ad in self.hazir:
             return "T.h(%s)" % json.dumps(ad)
         if ad in TARAYICIDA_YOK:
-            raise TonSyntaxError(
+            raise AxsSyntaxError(
                 "'%s' tarayicida yoktur (%s). Sunucudan veri almak icin "
                 "get()/post() kullan." % (ad, TARAYICIDA_YOK[ad]), satir, self.dosya)
         if degisken:
-            raise TonSyntaxError("'%s' adinda bir degisken yok" % ad, satir, self.dosya)
-        raise TonSyntaxError("'%s' adinda bir is yok" % ad, satir, self.dosya)
+            raise AxsSyntaxError("'%s' adinda bir degisken yok" % ad, satir, self.dosya)
+        raise AxsSyntaxError("'%s' adinda bir is yok" % ad, satir, self.dosya)
 
     def metin(self, parcalar, kapsam, satir):
         parcalar_js = []

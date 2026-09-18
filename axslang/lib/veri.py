@@ -12,8 +12,8 @@ import csv
 import json as _json
 import os
 
-from ..errors import TonRuntimeError, TonTypeError
-from ..values import Isim, dogru_mu, metin as _metin, sayi_mi, tonlastir
+from ..errors import AxsRuntimeError, AxsTypeError
+from ..values import Isim, dogru_mu, metin as _metin, sayi_mi, axslastir
 from . import gomulu, isim_alani
 
 
@@ -55,10 +55,10 @@ def _dosya_akisi(yol):
                 for satir in f:
                     satir = satir.strip()
                     if satir:
-                        yield tonlastir(_json.loads(satir))
+                        yield axslastir(_json.loads(satir))
         elif uzanti == ".json":
             with open(yol, encoding="utf-8-sig") as f:
-                veri = tonlastir(_json.load(f))
+                veri = axslastir(_json.load(f))
             if isinstance(veri, list):
                 yield from veri
             else:
@@ -213,7 +213,7 @@ def _sar(veri):
                 _json.dump(pythonlastir(ogeler), f, ensure_ascii=False, indent=2)
         elif uzanti in (".csv", ".tsv"):
             if not ogeler or not isinstance(ogeler[0], dict):
-                raise TonTypeError("CSV olarak kaydetmek icin satirlar harita olmali")
+                raise AxsTypeError("CSV olarak kaydetmek icin satirlar harita olmali")
             ayirac = "\t" if uzanti == ".tsv" else ","
             with open(yol, "w", encoding="utf-8", newline="") as f:
                 yazici = csv.DictWriter(f, fieldnames=list(ogeler[0].keys()), delimiter=ayirac)
@@ -261,5 +261,5 @@ def veri_ac(y, kaynak, tur=None):
     if not os.path.isabs(yol):
         yol = os.path.join(y.kok, yol)
     if not os.path.isfile(yol):
-        raise TonRuntimeError("Veri dosyasi bulunamadi: %s" % _metin(kaynak))
+        raise AxsRuntimeError("Veri dosyasi bulunamadi: %s" % _metin(kaynak))
     return _sar(Veri(y, _dosya_akisi(yol), os.path.basename(yol)))

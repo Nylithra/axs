@@ -9,7 +9,7 @@
 import threading
 import time
 
-from ..errors import TonRuntimeError, TonTypeError
+from ..errors import AxsRuntimeError, AxsTypeError
 from ..values import Gorev, cagrilabilir_mi, metin as _metin, sayi_mi, tur as _tur
 from . import gomulu, hem
 
@@ -39,7 +39,7 @@ def asyn(y, hedef, *args):
         adres = hedef
         gorev = _baslat(adres, lambda: getir(adres, *args))
     else:
-        raise TonTypeError("asyn() bir is ya da adres ister, %s verildi" % _tur(hedef))
+        raise AxsTypeError("asyn() bir is ya da adres ister, %s verildi" % _tur(hedef))
     y.gorevler.append(gorev)
     return gorev
 
@@ -55,7 +55,7 @@ def bekle(hedef=None, sure=None):
         return hedef.bekle(sure)
     if isinstance(hedef, list):
         return [bekle(g, sure) for g in hedef]
-    raise TonTypeError("bekle() sayi ya da gorev ister, %s verildi" % _tur(hedef))
+    raise AxsTypeError("bekle() sayi ya da gorev ister, %s verildi" % _tur(hedef))
 
 
 @gomulu("waitall", "hepsini_bekle")
@@ -68,7 +68,7 @@ def hepsini_bekle(gorevler):
 @hem("gorev", "done", "bitti_mi")
 def bitti_mi(gorev):
     if not isinstance(gorev, Gorev):
-        raise TonTypeError("bitti_mi() bir gorev ister")
+        raise AxsTypeError("bitti_mi() bir gorev ister")
     return gorev.bitti
 
 
@@ -81,7 +81,7 @@ def sonucu(gorev, sure=None):
 def paralel(y, isler, *args):
     """Birden cok isi ayni anda calistirir, sonuclarini sirayla dondurur."""
     if not isinstance(isler, list):
-        raise TonTypeError("paralel() bir is listesi ister")
+        raise AxsTypeError("paralel() bir is listesi ister")
     gorevler = []
     for oge in isler:
         if cagrilabilir_mi(oge):
@@ -91,7 +91,7 @@ def paralel(y, isler, *args):
             from .ag import getir
             gorevler.append(_baslat(oge, lambda a=oge: getir(a)))
         else:
-            raise TonTypeError("paralel() listesinde is ya da adres olmali")
+            raise AxsTypeError("paralel() listesinde is ya da adres olmali")
     y.gorevler.extend(gorevler)
     return [g.bekle() for g in gorevler]
 
@@ -99,7 +99,7 @@ def paralel(y, isler, *args):
 @gomulu("after", "sonra", yorumlayici=True)
 def sonra(y, saniye, hedef, *args):
     if not cagrilabilir_mi(hedef):
-        raise TonTypeError("sonra() bir is ister")
+        raise AxsTypeError("sonra() bir is ister")
 
     def calis():
         time.sleep(float(saniye))
@@ -114,7 +114,7 @@ def sonra(y, saniye, hedef, *args):
 def her_saniye(y, saniye, hedef, adet=None):
     """Belirli araliklarla tekrarlar. adet verilmezse durdurulana kadar surer."""
     if not cagrilabilir_mi(hedef):
-        raise TonTypeError("her_saniye() bir is ister")
+        raise AxsTypeError("her_saniye() bir is ister")
     sinir = int(adet) if adet is not None else None
 
     def calis():
@@ -135,5 +135,5 @@ def sure_sinir(y, saniye, hedef, *args):
     gorev = asyn(y, hedef, *args)
     gorev.thread.join(float(saniye))
     if not gorev.bitti:
-        raise TonRuntimeError("Islem %s saniyede bitmedi" % _metin(saniye))
+        raise AxsRuntimeError("Islem %s saniyede bitmedi" % _metin(saniye))
     return gorev.bekle()

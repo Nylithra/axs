@@ -1,6 +1,6 @@
 """Axs deger turleri ve bicimlendirme."""
 
-from .errors import TonTypeError
+from .errors import AxsTypeError
 
 
 class Isim:
@@ -18,7 +18,7 @@ class Isim:
                 nereden = "\n  ('%s' su dosyadan yuklendi: %s)" % (self.ad, self.kaynak)
             benzer = [u for u in sorted(self.uyeler) if u.startswith(ad[:3])][:4]
             oneri = ("\n  Bunlar var: " + ", ".join(benzer)) if benzer else ""
-            raise TonTypeError("'%s' icinde '%s' yok%s%s"
+            raise AxsTypeError("'%s' icinde '%s' yok%s%s"
                                % (self.ad, ad, oneri, nereden))
         return self.uyeler[ad]
 
@@ -185,12 +185,12 @@ def pythonlastir(v):
     return metin(v)
 
 
-def tonlastir(v):
+def axslastir(v):
     """Python verisini Axs degerine cevirir."""
     if isinstance(v, dict):
-        return {str(k): tonlastir(d) for k, d in v.items()}
+        return {str(k): axslastir(d) for k, d in v.items()}
     if isinstance(v, (list, tuple, set)):
-        return [tonlastir(x) for x in v]
+        return [axslastir(x) for x in v]
     if isinstance(v, (str, int, float, bool)) or v is None:
         return v
     return metin(v)

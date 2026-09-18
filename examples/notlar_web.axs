@@ -1,5 +1,5 @@
 # Web + veritabani: kucuk bir not defteri.
-# Calistir: ton examples/notlar_web.ton   ->  http://localhost:8080
+# Calistir: axs examples/notlar_web.axs   ->  http://localhost:8080
 
 use web
 

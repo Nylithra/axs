@@ -3,7 +3,7 @@
 import os
 import re
 
-from ..errors import TonSyntaxError
+from ..errors import AxsSyntaxError
 from ..okuma import dosya_oku
 from .parser import cozumle
 
@@ -60,7 +60,7 @@ YONTEMLER = {
 
 UCLUK_YARDIMCISI = """# JavaScript'teki `kosul ? evet : hayir` icin yardimci
 func _ucluk(kosul, evet, hayir)
-  if %kosul%
+  if kosul
     return evet()
   end
   return hayir()
@@ -71,11 +71,11 @@ end
 YERINDE_YARDIMCISI = """# JS'te reverse()/sort() listeyi yerinde degistirir; bu onu taklit eder
 func _yerinde_koy(_l, _yeni)
   _i = 0
-  for _o in %_yeni%
-    %_l%[%_i%] = %_o%
+  for _o in _yeni
+    _l[_i] = _o
     _i += 1
   end
-  return %_l%
+  return _l
 end
 """
 
@@ -90,7 +90,7 @@ class Cevirici:
         self.sinif_alanlari = {}    # sinif adi -> alan listesi
         self.deyim_basi = 0         # su anki deyimin ciktidaki baslangici
         self.deyim_girinti = 0
-        self.bu_adi = "%_bu%"      # `this` neyi gosteriyor
+        self.bu_adi = "_bu"        # `this` neyi gosteriyor
         self.ucluk_gerekli = False  # a ? b : c kullanildi mi
         self.yerinde_gerekli = False  # reverse()/sort() yerinde degistirme
 
@@ -191,7 +191,7 @@ class Cevirici:
             self.deyim(d["govde"], girinti)
             return
         if t == "Modul":
-            self.yaz(girinti, "# %s %s   (Axs'te: use \"dosya.ton\")" % (d["tur"], d["metin"]))
+            self.yaz(girinti, "# %s %s   (Axs'te: use \"dosya.axs\")" % (d["tur"], d["metin"]))
             self.uyar("'%s' satiri yorum yapildi; Axs'te `use` kullanilir" % d["tur"], satir)
             return
         if t == "Dondur":
@@ -254,7 +254,7 @@ class Cevirici:
             self.yaz(girinti, "%s %s 1" % (hedef, "+=" if e["islec"] == "++" else "-="))
             return
         if t == "Atama":
-            # a = b = 5  ->  b = 5 ;  a = %b%
+            # a = b = 5  ->  b = 5 ;  a = b
             if e["deger"].get("t") == "Atama" and e["islec"] == "=":
                 self.ifade_deyimi(e["deger"], girinti)
                 self.yaz(girinti, "%s = %s" % (self.atama_hedefi(e["hedef"]),
@@ -280,10 +280,10 @@ class Cevirici:
             elif baslangic["t"] == "Sinif":
                 self.sinif_yaz(baslangic, girinti, ad=hedef["ad"])
             else:
-                # `const n = { selam() { return this.ad } }` icin `this` -> %n%
+                # `const n = { selam() { return this.ad } }` icin `this` -> n
                 eski_bu = self.bu_adi
                 if baslangic["t"] == "Nesne":
-                    self.bu_adi = "%%%s%%" % hedef["ad"]
+                    self.bu_adi = hedef["ad"]
                 try:
                     self.yaz(girinti, "%s = %s" % (hedef["ad"], self.ifade(baslangic)))
                 finally:
@@ -299,13 +299,13 @@ class Cevirici:
                 if oge["t"] != "Ad":
                     self.todo(girinti, "ic ice dagitici atama cevrilemedi", satir)
                     continue
-                self.yaz(girinti, "%s = %%%s%%[%d]" % (oge["ad"], gecici, sira))
+                self.yaz(girinti, "%s = %s[%d]" % (oge["ad"], gecici, sira))
         elif hedef["t"] == "Nesne":
             for tur, anahtar, deger in hedef["ciftler"]:
                 if tur != "duz" or deger["t"] != "Ad":
                     self.todo(girinti, "ic ice dagitici atama cevrilemedi", satir)
                     continue
-                self.yaz(girinti, "%s = %%%s%%.%s" % (deger["ad"], gecici, anahtar["deger"]))
+                self.yaz(girinti, "%s = %s.%s" % (deger["ad"], gecici, anahtar["deger"]))
         else:
             self.todo(girinti, "dagitici atama cevrilemedi", satir)
 
@@ -340,7 +340,7 @@ class Cevirici:
                   e.get("satir"))
 
     def atama_hedefi(self, e):
-        """Atamanin SOL tarafi: Axs'te ciplak ad ya da %x%.alan yazilir."""
+        """Atamanin SOL tarafi: Axs'te ciplak ad ya da x.alan yazilir."""
         if e["t"] == "Ad":
             return e["ad"]
         if e["t"] == "Bu":
@@ -527,17 +527,17 @@ class Cevirici:
         self.yaz(girinti, "func %s(%s)" % (ad, ", ".join(params)))
         self.yaz(girinti + 1, "_bu = {}")
         for uye_adi, deger in alanlar:
-            self.yaz(girinti + 1, "%%_bu%%.%s = %s"
+            self.yaz(girinti + 1, "_bu.%s = %s"
                      % (uye_adi, self.ifade(deger) if deger else "null"))
         for uye_adi, yontem in yontemler:
             y_params, _ = self.params_yaz(yontem["params"], d.get("satir"))
             self.yaz(girinti + 1, "func %s(%s)" % (uye_adi, ", ".join(y_params)))
             self.blok(yontem["govde"], girinti + 2)
             self.yaz(girinti + 1, "end")
-            self.yaz(girinti + 1, "%%_bu%%.%s = %s" % (uye_adi, uye_adi))
+            self.yaz(girinti + 1, "_bu.%s = %s" % (uye_adi, uye_adi))
         if kurucu:
             self.blok(kurucu["govde"], girinti + 1)
-        self.yaz(girinti + 1, "return %_bu%")
+        self.yaz(girinti + 1, "return _bu")
         self.yaz(girinti, "end")
 
     def hata_metni(self, e):
@@ -557,7 +557,7 @@ class Cevirici:
         if t == "Sayi":
             return repr(e["deger"]) if isinstance(e["deger"], float) else str(e["deger"])
         if t == "Metin":
-            return ton_metin(e["deger"])
+            return axs_metin(e["deger"])
         if t == "Dogruluk":
             return "true" if e["deger"] else "false"
         if t == "Bos":
@@ -568,15 +568,13 @@ class Cevirici:
             ad = e["ad"]
             if cagri_hedefi:
                 return ad
-            if ad in self.isler:
-                return ad
-            return "%%%s%%" % ad
+            return ad
         if t == "Sablon":
             return self.sablon(e)
         if t == "Duzenli":
             self.uyar("duzenli ifade metne cevrildi: /%s/ (match/matches ile kullan)"
                       % e["desen"], satir)
-            return ton_metin(e["desen"])
+            return axs_metin(e["desen"])
         if t == "Dizi":
             return "[%s]" % ", ".join(self.ifade(o) for o in e["ogeler"]
                                       if o["t"] != "Bos")
@@ -633,10 +631,7 @@ class Cevirici:
                 parcalar.append(deger.replace("%", "%%").replace("\\", "\\\\")
                                 .replace('"', '\\"'))
             else:
-                if deger["t"] == "Ad" and deger["ad"] not in self.isler:
-                    parcalar.append("%%%s%%" % deger["ad"])
-                else:
-                    parcalar.append("%%(%s)%%" % self.ifade(deger))
+                parcalar.append("(%s);" % self.ifade(deger))
         return '"%s"' % "".join(parcalar)
 
     def nesne(self, e):
@@ -649,7 +644,7 @@ class Cevirici:
                 ad = self.ifade(anahtar)
             else:
                 ham = anahtar["deger"]
-                ad = ham if GECERLI_AD.match(ham) else ton_metin(ham)
+                ad = ham if GECERLI_AD.match(ham) else axs_metin(ham)
             parcalar.append("%s: %s" % (ad, self.ifade(deger)))
         return "{%s}" % ", ".join(parcalar)
 
@@ -692,12 +687,12 @@ class Cevirici:
         if hedef["t"] == "Uye" and not hedef["hesapli"] and hedef["nesne"]["t"] == "Ad":
             anahtar = (hedef["nesne"]["ad"], hedef["ad"])
             if anahtar in NESNE_ISLERI:
-                ton_adi = NESNE_ISLERI[anahtar]
-                if ton_adi == "_oge_id":
+                axs_adi = NESNE_ISLERI[anahtar]
+                if axs_adi == "_oge_id":
                     ic = args[0] if args else '""'
                     return 'oge("#" + %s)' % ic if not ic.startswith('"') \
                         else 'oge("#%s")' % ic[1:-1]
-                return "%s(%s)" % (ton_adi, ", ".join(args))
+                return "%s(%s)" % (axs_adi, ", ".join(args))
             if hedef["nesne"]["ad"] == "Array" and hedef["ad"] == "isArray":
                 return '(type(%s) == "liste")' % (args[0] if args else "null")
 
@@ -715,7 +710,7 @@ class Cevirici:
             if ad == "setInterval" and len(args) >= 2:
                 return "every(%s / 1000, %s)" % (args[1], args[0])
             if ad == "require":
-                self.uyar("require(): Axs'te `use \"dosya.ton\"` kullanilir",
+                self.uyar("require(): Axs'te `use \"dosya.axs\"` kullanilir",
                           e.get("satir"))
                 return "null"
             return "%s(%s)" % (ad, ", ".join(args))
@@ -800,7 +795,7 @@ class Cevirici:
         if sol_ad is None or sag_ad is None or sol_alan != sag_alan:
             self.uyar("sort() karsilastiricisi cevrilemedi", e.get("satir"))
             return ""
-        alan = (", " + ton_metin(sol_alan)) if sol_alan else ""
+        alan = (", " + axs_metin(sol_alan)) if sol_alan else ""
         if sol_ad == adlar[0] and sag_ad == adlar[1]:
             return alan
         if sol_ad == adlar[1] and sag_ad == adlar[0]:
@@ -845,11 +840,11 @@ class Cevirici:
             return "false"
         if islec == "in":
             return "has(%s, %s)" % (self.ifade(e["sag"]), self.ifade(e["sol"]))
-        ton_islec = IKILI.get(islec)
-        if ton_islec is None:
+        axs_islec = IKILI.get(islec)
+        if axs_islec is None:
             self.uyar("'%s' isleci cevrilemedi" % islec, e.get("satir"))
             return "null"
-        return "(%s %s %s)" % (self.ifade(e["sol"]), ton_islec, self.ifade(e["sag"]))
+        return "(%s %s %s)" % (self.ifade(e["sol"]), axs_islec, self.ifade(e["sag"]))
 
     def tekli(self, e):
         islec = e["islec"]
@@ -871,7 +866,7 @@ class Cevirici:
         if islec == "delete":
             if e["deger"]["t"] == "Uye" and not e["deger"]["hesapli"]:
                 return "remove(%s, %s)" % (self.ifade(e["deger"]["nesne"]),
-                                           ton_metin(e["deger"]["ad"]))
+                                           axs_metin(e["deger"]["ad"]))
             return "remove(%s)" % deger
         if islec == "~":
             self.uyar("bit islemi '~' Axs'te yok", e.get("satir"))
@@ -880,7 +875,7 @@ class Cevirici:
         return deger
 
 
-def ton_metin(s):
+def axs_metin(s):
     """Python metnini Axs metin sabitine cevirir."""
     govde = (s.replace("\\", "\\\\").replace('"', '\\"')
              .replace("%", "%%").replace("\n", "\\n").replace("\t", "\\t"))
@@ -896,5 +891,5 @@ def cevir(kaynak, dosya=None):
 
 def dosya_cevir(yol):
     if not os.path.isfile(yol):
-        raise TonSyntaxError("Dosya bulunamadi: %s" % yol)
+        raise AxsSyntaxError("Dosya bulunamadi: %s" % yol)
     return cevir(dosya_oku(yol), yol)

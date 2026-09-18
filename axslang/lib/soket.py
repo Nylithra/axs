@@ -25,8 +25,8 @@ import threading
 import time
 import urllib.parse
 
-from ..errors import TonRuntimeError, TonTypeError
-from ..values import Gorev, cagrilabilir_mi, metin as _metin, pythonlastir, tonlastir
+from ..errors import AxsRuntimeError, AxsTypeError
+from ..values import Gorev, cagrilabilir_mi, metin as _metin, pythonlastir, axslastir
 from . import isim_alani
 
 SIHIRLI = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
@@ -74,7 +74,7 @@ class Soket:
         try:
             ham = socket.create_connection((parca.hostname, port), timeout=zaman_asimi)
         except OSError as e:
-            raise TonRuntimeError("Baglanti kurulamadi (%s): %s" % (adres, e))
+            raise AxsRuntimeError("Baglanti kurulamadi (%s): %s" % (adres, e))
         if guvenli:
             baglam = ssl.create_default_context()
             ca = os.environ.get("REQUESTS_CA_BUNDLE") or os.environ.get("SSL_CERT_FILE")
@@ -83,7 +83,7 @@ class Soket:
             try:
                 ham = baglam.wrap_socket(ham, server_hostname=parca.hostname)
             except ssl.SSLError as e:
-                raise TonRuntimeError("Guvenli baglanti kurulamadi (%s): %s" % (adres, e))
+                raise AxsRuntimeError("Guvenli baglanti kurulamadi (%s): %s" % (adres, e))
         self.sok = ham
         self._el_sikis(parca, yol, port, basliklar, zaman_asimi)
         self.acik = True
@@ -111,23 +111,23 @@ class Soket:
         while b"\r\n\r\n" not in cevap:
             parca_veri = self.sok.recv(4096)
             if not parca_veri:
-                raise TonRuntimeError("El sikismasi yarida kesildi: %s" % self.adres)
+                raise AxsRuntimeError("El sikismasi yarida kesildi: %s" % self.adres)
             cevap += parca_veri
             if len(cevap) > 65536:
-                raise TonRuntimeError("El sikismasi cevabi cok buyuk")
+                raise AxsRuntimeError("El sikismasi cevabi cok buyuk")
         basluk, _, kalan = cevap.partition(b"\r\n\r\n")
         self._tampon = kalan
         metin_basluk = basluk.decode("latin-1")
         ilk_satir = metin_basluk.split("\r\n", 1)[0]
         if "101" not in ilk_satir:
-            raise TonRuntimeError(
+            raise AxsRuntimeError(
                 "WebSocket el sikismasi reddedildi (%s): %s" % (self.adres, ilk_satir))
         beklenen = base64.b64encode(
             hashlib.sha1((anahtar + SIHIRLI).encode()).digest()).decode()
         for satir in metin_basluk.split("\r\n")[1:]:
             if satir.lower().startswith("sec-websocket-accept:"):
                 if satir.split(":", 1)[1].strip() != beklenen:
-                    raise TonRuntimeError("Sunucunun el sikisma yaniti gecersiz")
+                    raise AxsRuntimeError("Sunucunun el sikisma yaniti gecersiz")
                 break
 
     # ------------------------------------------------------------ cerceveler
@@ -148,7 +148,7 @@ class Soket:
 
     def _cerceve_gonder(self, tur, veri=b""):
         if not self.acik:
-            raise TonRuntimeError("Baglanti kapali")
+            raise AxsRuntimeError("Baglanti kapali")
         ilk = bytes([0x80 | tur])
         uzunluk = len(veri)
         maske = os.urandom(4)
@@ -164,7 +164,7 @@ class Soket:
                 self.sok.sendall(basluk + maske + maskeli)
             except OSError as e:
                 self.acik = False
-                raise TonRuntimeError("Gonderilemedi: %s" % e)
+                raise AxsRuntimeError("Gonderilemedi: %s" % e)
 
     def _cerceve_al(self, zaman_asimi=None):
         """Tam bir mesaj okur (parcali cerceveleri birlestirir)."""
@@ -197,7 +197,7 @@ class Soket:
                 self.kapanma_sebebi = sebep
                 try:
                     self._cerceve_gonder(KAPAT, veri[:2])
-                except TonRuntimeError:
+                except AxsRuntimeError:
                     pass
                 self.acik = False
                 raise SoketKapali(kod, sebep)
@@ -232,7 +232,7 @@ class Soket:
             return None
         except SoketKapali as e:
             self.acik = False
-            raise TonRuntimeError("Baglanti kapandi (%s) %s" % (e.kod, e.sebep))
+            raise AxsRuntimeError("Baglanti kapandi (%s) %s" % (e.kod, e.sebep))
         return _coz(veri)
 
     def kapat(self, kod=1000, sebep=""):
@@ -241,7 +241,7 @@ class Soket:
             try:
                 self._cerceve_gonder(KAPAT,
                                      struct.pack(">H", int(kod)) + sebep.encode("utf-8"))
-            except (TonRuntimeError, OSError):
+            except (AxsRuntimeError, OSError):
                 pass
         self.acik = False
         try:
@@ -258,7 +258,7 @@ def _coz(veri):
     kirp = veri.strip()
     if kirp[:1] in ("{", "["):
         try:
-            return tonlastir(_json.loads(kirp))
+            return axslastir(_json.loads(kirp))
         except ValueError:
             return veri
     return veri
@@ -270,7 +270,7 @@ def soket_alani(y, soket):
     def dinle(is_, hata_isi=None):
         """Gelen her mesaj icin verilen isi calistirir (arka planda)."""
         if not cagrilabilir_mi(is_):
-            raise TonTypeError("dinle() bir is ister")
+            raise AxsTypeError("dinle() bir is ister")
         gorev = Gorev("soket:" + soket.adres)
 
         def dongu():

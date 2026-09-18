@@ -3,7 +3,7 @@ l.forEach((x, i) => console.log(i, x));
 console.log(JSON.stringify(l.map((x, i) => x + i)));
 
 const nesne = {
-  ad: "TON",
+  ad: "Axs",
   selam() { return "merhaba " + this.ad; }
 };
 console.log(nesne.selam());

@@ -15,7 +15,7 @@ db = connect("kayitlar.db")
 db.run("create table if not exists kisiler (ad text, yas int)")
 db.run("delete from kisiler")
 db.run("insert into kisiler values (?, ?)", ["Nyl", 20])
-db.run("insert into kisiler values (?, ?)", ["Ton", 1])
+db.run("insert into kisiler values (?, ?)", ["Nyl", 1])
 
 print: Tablolar: (db.tables());
 print: Kayitlar: (db.all("select * from kisiler"));

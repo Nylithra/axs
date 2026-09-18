@@ -1,7 +1,7 @@
 """Axs dilinin hata turleri. Hata mesajlari Turkce ve sade tutulur."""
 
 
-class TonError(Exception):
+class AxsError(Exception):
     """Tum Axs hatalarinin atasi."""
 
     baslik = "Hata"
@@ -26,23 +26,23 @@ class TonError(Exception):
         return self.rapor()
 
 
-class TonSyntaxError(TonError):
+class AxsSyntaxError(AxsError):
     baslik = "Yazim hatasi"
 
 
-class TonRuntimeError(TonError):
+class AxsRuntimeError(AxsError):
     baslik = "Calisma hatasi"
 
 
-class TonNameError(TonRuntimeError):
+class AxsNameError(AxsRuntimeError):
     baslik = "Bilinmeyen ad"
 
 
-class TonTypeError(TonRuntimeError):
+class AxsTypeError(AxsRuntimeError):
     baslik = "Tur hatasi"
 
 
-class TonUserError(TonRuntimeError):
+class AxsUserError(AxsRuntimeError):
     """`hata("...")` ile kullanicinin kendi firlattigi hata."""
 
     baslik = "Hata"

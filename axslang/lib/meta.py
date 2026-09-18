@@ -5,7 +5,7 @@
     print: iki_kat(21)
 """
 
-from ..errors import TonRuntimeError, TonTypeError
+from ..errors import AxsRuntimeError, AxsTypeError
 from ..values import Islev, cagrilabilir_mi, metin as _metin, tur as _tur
 from . import gomulu
 
@@ -16,12 +16,12 @@ def kodu_calistir(y, kod, degiskenler=None):
     kapsam = y.evren
     if degiskenler:
         if not isinstance(degiskenler, dict):
-            raise TonTypeError("meta() ikinci deger olarak harita ister")
+            raise AxsTypeError("meta() ikinci deger olarak harita ister")
         kapsam = Kapsam(y.evren, {str(k): v for k, v in degiskenler.items()})
     return y.calistir_kaynak(_metin(kod), "<meta>", kapsam)
 
 
-@gomulu("eval_ton", "degerini_bul", yorumlayici=True)
+@gomulu("eval_axs", "degerini_bul", yorumlayici=True)
 def degerini_bul(y, ifade, degiskenler=None):
     return kodu_calistir(y, "_meta_sonuc = " + _metin(ifade), degiskenler) or \
         y.evren.bul("_meta_sonuc")
@@ -79,10 +79,10 @@ def cagir(y, hedef, argumanlar=None):
     if isinstance(hedef, str):
         bulunan = degeri(y, hedef)
         if bulunan is None:
-            raise TonRuntimeError("'%s' adinda bir is yok" % hedef)
+            raise AxsRuntimeError("'%s' adinda bir is yok" % hedef)
         hedef = bulunan
     if not cagrilabilir_mi(hedef):
-        raise TonTypeError("%s cagrilamaz" % _tur(hedef))
+        raise AxsTypeError("%s cagrilamaz" % _tur(hedef))
     return y.cagir(hedef, list(argumanlar or []))
 
 

@@ -2,7 +2,7 @@
 
 import re
 
-from ..errors import TonSyntaxError
+from ..errors import AxsSyntaxError
 
 ANAHTAR_KELIMELER = {
     "var", "let", "const", "function", "return", "if", "else", "for", "while",
@@ -126,7 +126,7 @@ def coz(kaynak, dosya=None):
         if kaynak.startswith("/*", i):
             kapanis = kaynak.find("*/", i + 2)
             if kapanis == -1:
-                raise TonSyntaxError("Yorum kapatilmamis (*/ yok)", satir, dosya)
+                raise AxsSyntaxError("Yorum kapatilmamis (*/ yok)", satir, dosya)
             satir += kaynak.count("\n", i, kapanis)
             if kaynak.count("\n", i, kapanis):
                 yeni_satir = True
@@ -143,11 +143,11 @@ def coz(kaynak, dosya=None):
                     j += 2
                     continue
                 if kaynak[j] == "\n":
-                    raise TonSyntaxError("Metin tirnagi kapatilmamis", satir, dosya)
+                    raise AxsSyntaxError("Metin tirnagi kapatilmamis", satir, dosya)
                 ham.append(kaynak[j])
                 j += 1
             if j >= n:
-                raise TonSyntaxError("Metin tirnagi kapatilmamis", satir, dosya)
+                raise AxsSyntaxError("Metin tirnagi kapatilmamis", satir, dosya)
             ekle("STR", _kacis_coz("".join(ham), satir))
             yeni_satir = False
             i = j + 1
@@ -190,7 +190,7 @@ def coz(kaynak, dosya=None):
                 tampon.append(kaynak[j])
                 j += 1
             if j >= n:
-                raise TonSyntaxError("Sablon metin kapatilmamis (`)", satir, dosya)
+                raise AxsSyntaxError("Sablon metin kapatilmamis (`)", satir, dosya)
             parcalar.append(("text", _kacis_coz("".join(tampon), satir)))
             ekle("TEMPLATE", parcalar)
             yeni_satir = False
@@ -258,7 +258,7 @@ def coz(kaynak, dosya=None):
                 i += len(isaret)
                 break
         else:
-            raise TonSyntaxError("Anlasilmayan karakter: %r" % c, satir, dosya)
+            raise AxsSyntaxError("Anlasilmayan karakter: %r" % c, satir, dosya)
 
     tokenlar.append(Token("EOF", None, satir, True))
     return tokenlar

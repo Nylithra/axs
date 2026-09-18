@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Axs dilinin calistiricisi.  Kullanim:  ton main.ton"""
+"""Axs dilinin calistiricisi.  Kullanim:  ton main.axs"""
 
 import os
 import sys

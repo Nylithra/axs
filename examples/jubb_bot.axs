@@ -1,6 +1,6 @@
 # Jubbio bot ornegi (REST tarafi).
-#   JUBB_TOKEN=... ton examples/jubb_bot.ton
-#   ton examples/jubb_bot.ton BOT_TOKEN UYGULAMA_ID
+#   JUBB_TOKEN=... axs examples/jubb_bot.axs
+#   axs examples/jubb_bot.axs BOT_TOKEN UYGULAMA_ID
 #
 # Gercek zamanli olay dinleme (gateway) WebSocket ister; o ayri gelecek.
 # Buradaki her sey bugun calisir.
@@ -9,7 +9,7 @@ use jubbio
 
 token = al(_argv, 0, env("JUBB_TOKEN"))
 if token == ""
-  print: Kullanim: ton examples/jubb_bot.ton BOT_TOKEN [UYGULAMA_ID]
+  print: Kullanim: axs examples/jubb_bot.axs BOT_TOKEN [UYGULAMA_ID]
   print: (ya da sunucu/kanal kimliklerini asagidan degistir)
   exit(0)
 end
@@ -29,12 +29,12 @@ SUNUCU = 1
 KANAL = 1
 
 # --- duz mesaj ---
-jubbio.yolla(SUNUCU, KANAL, "Merhaba! Ben TON ile yazildim.")
+jubbio.yolla(SUNUCU, KANAL, "Merhaba! Ben Axs ile yazildim.")
 
 # --- gomulu (embed) mesaj ---
 jubbio.yolla(SUNUCU, KANAL, {
-  baslik: "TON Dili",
-  aciklama: "Bu mesaji yollayan bot TON ile yazildi.",
+  baslik: "Axs Dili",
+  aciklama: "Bu mesaji yollayan bot Axs ile yazildi.",
   renk: "#2f6fed",
   alt_yazi: "tonjubb"
 })

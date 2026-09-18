@@ -7,7 +7,7 @@ yokdeger = null
 print: ad; - yas; - boy; - aktif; - yokdeger;
 print: tur: (type(ad)); (type(yas)); (type(boy)); (type(aktif)); (type(yokdeger));
 
-kisi = {ad: "Nyl", yas: 20, diller: ["ton", "tnl"]}
+kisi = {ad: "Nyl", yas: 20, diller: ["axs", "nyl"]}
 print: kisi.ad; kisi.yas; kisi.diller[0];
 print: kisi["ad"];
 

@@ -1,7 +1,7 @@
 """Axs sozdizimi cozumleyicisi (parser)."""
 
 from . import nodes as N
-from .errors import TonSyntaxError
+from .errors import AxsSyntaxError
 from .lexer import anahtar, coz
 
 BITIRICILER = {"end", "else", "elif", "catch"}
@@ -33,7 +33,7 @@ class Parser:
 
     def hata(self, mesaj, token=None):
         token = token or self.bak()
-        return TonSyntaxError(mesaj, token.line, self.dosya)
+        return AxsSyntaxError(mesaj, token.line, self.dosya)
 
     def esit(self, kind, value=None):
         t = self.bak()

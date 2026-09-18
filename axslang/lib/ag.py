@@ -13,8 +13,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from ..errors import TonRuntimeError
-from ..values import Isim, metin as _metin, pythonlastir, tonlastir
+from ..errors import AxsRuntimeError
+from ..values import Isim, metin as _metin, pythonlastir, axslastir
 from . import gomulu, isim_alani
 
 ZAMAN_ASIMI = 30
@@ -25,13 +25,13 @@ def _cevap_coz(ham, tur_basligi):
     metin = ham.decode("utf-8", "replace")
     if "json" in (tur_basligi or "").lower():
         try:
-            return tonlastir(_json.loads(metin))
+            return axslastir(_json.loads(metin))
         except ValueError:
             return metin
     kirp = metin.lstrip()
     if kirp[:1] in "{[":
         try:
-            return tonlastir(_json.loads(metin))
+            return axslastir(_json.loads(metin))
         except ValueError:
             return metin
     return metin
@@ -72,9 +72,9 @@ def _istek(yontem, adres, veri=None, basliklar=None, zaman_asimi=None, ham=False
             "veri": icerik if ham else _cevap_coz(icerik, (e.headers or {}).get("Content-Type")),
         }
     except urllib.error.URLError as e:
-        raise TonRuntimeError("Baglanti kurulamadi (%s): %s" % (adres, e.reason))
+        raise AxsRuntimeError("Baglanti kurulamadi (%s): %s" % (adres, e.reason))
     except (OSError, ValueError) as e:
-        raise TonRuntimeError("Baglanti hatasi (%s): %s" % (adres, e))
+        raise AxsRuntimeError("Baglanti hatasi (%s): %s" % (adres, e))
 
 
 def _adres_kur(temel, yol, parametreler=None):
@@ -101,7 +101,7 @@ def _basariyi_dogrula(cevap, adres):
     ozet = _metin(cevap["veri"])
     if len(ozet) > 200:
         ozet = ozet[:200] + "..."
-    raise TonRuntimeError("Istek basarisiz (%s) %s: %s" % (cevap["durum"], adres, ozet))
+    raise AxsRuntimeError("Istek basarisiz (%s) %s: %s" % (cevap["durum"], adres, ozet))
 
 
 @gomulu("get", "getir")
@@ -125,7 +125,7 @@ def istek(adres, yontem="GET", veri=None, basliklar=None, zaman_asimi=None):
 def indir(y, adres, dosya=None):
     c = _istek("GET", _adres_kur("", adres), ham=True)
     if not c["basarili"]:
-        raise TonRuntimeError("Indirilemedi (%s): %s" % (c["durum"], adres))
+        raise AxsRuntimeError("Indirilemedi (%s): %s" % (c["durum"], adres))
     ad = _metin(dosya) if dosya else os.path.basename(urllib.parse.urlparse(adres).path) or "indirilen"
     yol = ad if os.path.isabs(ad) else os.path.join(y.kok, ad)
     with open(yol, "wb") as f:
@@ -159,7 +159,7 @@ def _http_baglanti(adres):
         try:
             c = _istek("GET", durum["adres"])
             return bool(c["durum"])
-        except TonRuntimeError:
+        except AxsRuntimeError:
             return False
 
     alan = isim_alani("baglanti", {
@@ -193,7 +193,7 @@ def _veritabani_baglanti(yol):
         try:
             imlec = baglanti.execute(_metin(sql), _duzle(degerler))
         except sqlite3.Error as e:
-            raise TonRuntimeError("SQL hatasi: %s" % e)
+            raise AxsRuntimeError("SQL hatasi: %s" % e)
         return imlec
 
     def _duzle(degerler):

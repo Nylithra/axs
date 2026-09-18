@@ -1,4 +1,4 @@
-# TON — Moderasyon ve Destek Botu
+# Axs — Moderasyon ve Destek Botu
 
 Jubbio sunucularını spam, reklam ve kötü içeriğe karşı korur; moderasyon ve
 destek araçlarıyla yönetimi kolaylaştırır.
@@ -17,10 +17,10 @@ JUBB_SUNUCU=sunucu_kimligin
 ```
 
 ```bash
-ton bot.ton
+axs bot.axs
 ```
 
-Durdurmak için `Ctrl-C`. Ayarlar ve kayıtlar `ton.db` dosyasında tutulur.
+Durdurmak için `Ctrl-C`. Ayarlar ve kayıtlar `axs.db` dosyasında tutulur.
 
 Sunucuda ilk iş: **`/destek-ayarla`** ve **`/koruma`**.
 
@@ -112,15 +112,15 @@ Ayarlarda seçtiğin **yetkili rol** de bütün moderasyon komutlarını kullana
 
 | Dosya | İçerik |
 |---|---|
-| `bot.ton` | Giriş: komut tanımları, olay yönlendirme |
-| `ortak.ton` | Veritabanı, ayarlar, gömülü kutular, yetki, log |
-| `ticket.ton` | Destek sistemi |
-| `moderasyon.ton` | Moderasyon komutları |
-| `koruma.ton` | Otomatik filtreler |
+| `bot.axs` | Giriş: komut tanımları, olay yönlendirme |
+| `ortak.axs` | Veritabanı, ayarlar, gömülü kutular, yetki, log |
+| `ticket.axs` | Destek sistemi |
+| `moderasyon.axs` | Moderasyon komutları |
+| `koruma.axs` | Otomatik filtreler |
 
-Yeni komut eklemek: `bot.ton` içindeki `KOMUTLAR` listesine tanımı, `slash_geldi`
+Yeni komut eklemek: `bot.axs` içindeki `KOMUTLAR` listesine tanımı, `slash_geldi`
 işine de bir `elif` dalı ekle.
 
 ## Not
 
-`.env` ve `ton.db` `.gitignore` içinde — token'ın ve kayıtların depoya gitmez.
+`.env` ve `axs.db` `.gitignore` içinde — token'ın ve kayıtların depoya gitmez.

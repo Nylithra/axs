@@ -1,6 +1,6 @@
 """Axs tarayici paketi: derlenmis kodu tek bir HTML dosyasina koyar.
 
-    ton paket sayac.ton      ->  sayac.html  (cift tiklayip acabilirsin)
+    axs paket sayac.axs      ->  sayac.html  (cift tiklayip acabilirsin)
 """
 
 import os
@@ -27,37 +27,37 @@ def calisma_zamani():
     return dosya_oku(CALISMA_ZAMANI, satirlari_duzelt=False)
 
 
-def derle(ton_dosyasi):
+def derle(axs_dosyasi):
     """Bir Axs dosyasini tarayici JavaScript'ine cevirir."""
-    d = Derleyici(ton_dosyasi)
-    return d.derle(dosya_oku(ton_dosyasi), os.path.basename(ton_dosyasi))
+    d = Derleyici(axs_dosyasi)
+    return d.derle(dosya_oku(axs_dosyasi), os.path.basename(axs_dosyasi))
 
 
 GOVDE_UZANTILARI = (".govde.html", ".body.html")
 
 
-def govde_bul(ton_dosyasi, govde=None):
+def govde_bul(axs_dosyasi, govde=None):
     """Yaninda `<ad>.govde.html` varsa onu sayfa govdesi yapar.
 
     Paket ciktisi `<ad>.html` oldugu icin govde dosyasinin adi ayridir."""
     if govde is not None:
         return govde
-    temel = os.path.splitext(ton_dosyasi)[0]
+    temel = os.path.splitext(axs_dosyasi)[0]
     for uzanti in GOVDE_UZANTILARI:
         if os.path.isfile(temel + uzanti):
             return dosya_oku(temel + uzanti)
     return ""
 
 
-def sayfa(ton_dosyasi, baslik=None, govde=None, gomulu=True, betik_adresi=None,
+def sayfa(axs_dosyasi, baslik=None, govde=None, gomulu=True, betik_adresi=None,
           js_adresi=None):
     """Tarayicida calisacak tam HTML sayfasini uretir."""
-    ad = os.path.splitext(os.path.basename(ton_dosyasi))[0]
+    ad = os.path.splitext(os.path.basename(axs_dosyasi))[0]
     icerik = ('<div id="axs-uygulama">%s</div>\n<pre id="axs-cikti"></pre>'
-              % govde_bul(ton_dosyasi, govde))
+              % govde_bul(axs_dosyasi, govde))
     if gomulu:
         betikler = ("<script>\n%s\n</script>\n<script>\n%s\n</script>"
-                    % (calisma_zamani(), derle(ton_dosyasi)))
+                    % (calisma_zamani(), derle(axs_dosyasi)))
     else:
         betikler = ('<script src="%s"></script>\n<script src="%s"></script>'
                     % (js_adresi or "/axs.js", betik_adresi or ("/%s.axs.js" % ad)))

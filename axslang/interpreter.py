@@ -4,7 +4,7 @@ import os
 import sys
 
 from . import nodes as N
-from .errors import TonError, TonNameError, TonRuntimeError, TonTypeError, TonUserError
+from .errors import AxsError, AxsNameError, AxsRuntimeError, AxsTypeError, AxsUserError
 from .okuma import dosya_oku
 from .parser import cozumle, cozumle_ifade
 from .values import (Bagli, Gomulu, Gorev, Isim, Islev, cagrilabilir_mi,
@@ -86,7 +86,7 @@ class Yorumlayici:
         self._kutuphane_yukle = kutuphane_yukle
         self.evren = Kapsam()
         self.yuklenenler = {}
-        # `use "komsu.ton"` cagiran dosyanin yanindan cozulur
+        # `use "komsu.axs"` cagiran dosyanin yanindan cozulur
         self.klasor_yigini = [self.kok]
         self.gorevler = []
         self._ifade_onbellek = {}
@@ -155,7 +155,7 @@ class Yorumlayici:
             if t == "Tekrarla":
                 sayi = self.degerlendir(d.sayi, kapsam)
                 if not sayi_mi(sayi):
-                    raise TonTypeError("'repeat' bir sayi ister, %s verildi" % tur(sayi), d.line)
+                    raise AxsTypeError("'repeat' bir sayi ister, %s verildi" % tur(sayi), d.line)
                 for i in range(int(sayi)):
                     if d.sayac:
                         kapsam.ata(d.sayac, i + 1)
@@ -183,7 +183,7 @@ class Yorumlayici:
                     self.blok(d.govde, kapsam)
                 except (_Dondur, _Durdur, _Atla):
                     raise
-                except TonError as e:
+                except AxsError as e:
                     if d.hata_adi:
                         kapsam.ata(d.hata_adi, e.mesaj)
                     kapsam.ata("hata", e.mesaj)
@@ -196,13 +196,13 @@ class Yorumlayici:
                 return None
             if t == "Kullan":
                 return self._kullan(d, kapsam)
-        except TonError as e:
+        except AxsError as e:
             if e.satir is None:
                 e.satir = d.line
             if e.dosya is None:
                 e.dosya = self.dosya
             raise
-        raise TonRuntimeError("Bilinmeyen deyim: %s" % t, d.line)
+        raise AxsRuntimeError("Bilinmeyen deyim: %s" % t, d.line)
 
     def _her(self, d, kapsam):
         kaynak = self.degerlendir(d.kaynak, kapsam)
@@ -215,7 +215,7 @@ class Yorumlayici:
         elif hasattr(kaynak, "__iter__"):
             ogeler = kaynak
         else:
-            raise TonTypeError("'for' listede, haritada ya da metinde gezer; %s verildi"
+            raise AxsTypeError("'for' listede, haritada ya da metinde gezer; %s verildi"
                                % tur(kaynak), d.line)
         for oge in ogeler:
             if d.ikinci:
@@ -223,7 +223,7 @@ class Yorumlayici:
                     kapsam.ata(d.ad, oge[0])
                     kapsam.ata(d.ikinci, oge[1])
                 else:
-                    raise TonTypeError("Iki degiskenli 'for' icin ikili deger gerekir", d.line)
+                    raise AxsTypeError("Iki degiskenli 'for' icin ikili deger gerekir", d.line)
             else:
                 kapsam.ata(d.ad, list(oge) if isinstance(oge, tuple) else oge)
             try:
@@ -242,7 +242,7 @@ class Yorumlayici:
                 try:
                     onceki = kapsam.bul(hedef.ad)
                 except KeyError:
-                    raise TonNameError("'%s' adinda bir degisken yok" % hedef.ad, d.line)
+                    raise AxsNameError("'%s' adinda bir degisken yok" % hedef.ad, d.line)
             else:
                 onceki = self.degerlendir(hedef, kapsam)
             deger = self.islem(d.islec[0], onceki, deger, d.line)
@@ -257,15 +257,15 @@ class Yorumlayici:
                 nesne[anahtar if isinstance(anahtar, str) else metin(anahtar)] = deger
             elif isinstance(nesne, list):
                 if not sayi_mi(anahtar):
-                    raise TonTypeError("Liste sirasi sayi olmali", d.line)
+                    raise AxsTypeError("Liste sirasi sayi olmali", d.line)
                 i = int(anahtar)
                 if i < 0:
                     i += len(nesne)
                 if not 0 <= i < len(nesne):
-                    raise TonRuntimeError("Liste disinda sira: %s" % metin(anahtar), d.line)
+                    raise AxsRuntimeError("Liste disinda sira: %s" % metin(anahtar), d.line)
                 nesne[i] = deger
             else:
-                raise TonTypeError("%s icine deger konulamaz" % tur(nesne), d.line)
+                raise AxsTypeError("%s icine deger konulamaz" % tur(nesne), d.line)
         elif isinstance(hedef, N.Uye):
             nesne = self.degerlendir(hedef.nesne, kapsam)
             if isinstance(nesne, dict):
@@ -273,15 +273,15 @@ class Yorumlayici:
             elif isinstance(nesne, Isim):
                 nesne.uyeler[hedef.ad] = deger
             else:
-                raise TonTypeError("%s uzerine '%s' yazilamaz" % (tur(nesne), hedef.ad), d.line)
+                raise AxsTypeError("%s uzerine '%s' yazilamaz" % (tur(nesne), hedef.ad), d.line)
         else:
-            raise TonRuntimeError("Buraya deger atanamaz", d.line)
+            raise AxsRuntimeError("Buraya deger atanamaz", d.line)
         return deger
 
     def _kullan(self, d, kapsam):
         kaynak = self.degerlendir(d.kaynak, kapsam)
         if not isinstance(kaynak, str):
-            raise TonTypeError("'use' bir ad ya da dosya yolu ister", d.line)
+            raise AxsTypeError("'use' bir ad ya da dosya yolu ister", d.line)
         kutuphane = self._kutuphane_yukle(self, kaynak)
         if kutuphane is not None:
             kapsam.ata(d.takma or kutuphane.ad, kutuphane)
@@ -290,11 +290,11 @@ class Yorumlayici:
         ad_ile = isinstance(d.kaynak, N.Sabit)
         yol = self.dosya_bul(kaynak)
         if yol is None and ad_ile:
-            yol = self.ton_kutuphanesi_bul(kaynak)
+            yol = self.axs_kutuphanesi_bul(kaynak)
             if yol is not None and not d.takma:
                 d = N.Kullan(d.kaynak, kaynak, line=d.line)
         if yol is None:
-            raise TonRuntimeError(
+            raise AxsRuntimeError(
                 "'%s' bulunamadi. Kutuphane adi ya da dosya yolu olmali." % kaynak, d.line)
         if yol in self.yuklenenler:
             modul = self.yuklenenler[yol]
@@ -345,7 +345,7 @@ class Yorumlayici:
                 gorulen.append(y)
         return gorulen
 
-    def ton_kutuphanesi_bul(self, ad):
+    def axs_kutuphanesi_bul(self, ad):
         for klasor in self.kutuphane_yollari():
             for uzanti in UZANTILAR:
                 aday = os.path.join(klasor, ad + uzanti)
@@ -382,7 +382,7 @@ class Yorumlayici:
             except KeyError:
                 if e.ad in self.gomulu:
                     return self.gomulu[e.ad]
-                raise TonNameError("'%s' adinda bir degisken yok" % e.ad, e.line, self.dosya)
+                raise AxsNameError("'%s' adinda bir degisken yok" % e.ad, e.line, self.dosya)
         if t == "Metin":
             return self.metin_kur(e.parcalar, kapsam, e.line)
         if t == "Ad":
@@ -391,7 +391,7 @@ class Yorumlayici:
                 return kapsam.bul(e.ad)
             if e.ad in self.gomulu:
                 return self.gomulu[e.ad]
-            raise TonNameError("'%s' diye bir sey yok" % e.ad, e.line, self.dosya)
+            raise AxsNameError("'%s' diye bir sey yok" % e.ad, e.line, self.dosya)
         if t == "Ikili":
             return self.ikili(e, kapsam)
         if t == "Tekli":
@@ -399,7 +399,7 @@ class Yorumlayici:
             if e.islec == "not":
                 return not dogru_mu(deger)
             if not sayi_mi(deger):
-                raise TonTypeError("'-' sadece sayilarda kullanilir", e.line)
+                raise AxsTypeError("'-' sadece sayilarda kullanilir", e.line)
             return -deger
         if t == "Liste":
             return [self.degerlendir(x, kapsam) for x in e.ogeler]
@@ -422,7 +422,7 @@ class Yorumlayici:
             if e.ad:
                 kapsam.ata(e.ad, islev)
             return islev
-        raise TonRuntimeError("Bilinmeyen ifade: %s" % t, e.line)
+        raise AxsRuntimeError("Bilinmeyen ifade: %s" % t, e.line)
 
     def metin_kur(self, parcalar, kapsam, satir):
         cikti = []
@@ -442,7 +442,7 @@ class Yorumlayici:
         if dugum is None:
             try:
                 dugum = cozumle_ifade(kod, self.dosya)
-            except TonError as e:
+            except AxsError as e:
                 if e.satir is None:
                     e.satir = satir
                 raise
@@ -456,7 +456,7 @@ class Yorumlayici:
             if ad in self.gomulu:
                 deger = self.gomulu[ad]
             else:
-                raise TonNameError("'%s' adinda bir degisken yok" % ad, satir, self.dosya)
+                raise AxsNameError("'%s' adinda bir degisken yok" % ad, satir, self.dosya)
         for tip, anahtar in erisimler:
             if tip == "attr":
                 deger = self.uye(deger, anahtar, satir)
@@ -474,22 +474,22 @@ class Yorumlayici:
             return nesne[k]
         if isinstance(nesne, (list, str)):
             if not sayi_mi(anahtar):
-                raise TonTypeError("Sira numarasi sayi olmali, %s verildi" % tur(anahtar), satir)
+                raise AxsTypeError("Sira numarasi sayi olmali, %s verildi" % tur(anahtar), satir)
             i = int(anahtar)
             if i < 0:
                 i += len(nesne)
             if not 0 <= i < len(nesne):
-                raise TonRuntimeError(
+                raise AxsRuntimeError(
                     "%s icinde %s. sira yok (uzunluk %d)" % (tur(nesne), metin(anahtar), len(nesne)),
                     satir)
             return nesne[i]
-        raise TonTypeError("%s icinde sira ile erisim yok" % tur(nesne), satir)
+        raise AxsTypeError("%s icinde sira ile erisim yok" % tur(nesne), satir)
 
     def uye(self, nesne, ad, satir):
         if isinstance(nesne, Isim):
             try:
                 return nesne.get(ad)
-            except TonTypeError as e:
+            except AxsTypeError as e:
                 e.satir = satir
                 raise
         # Haritada kendi alani varsa o kazanir: veri, hazir yontemi golgeler.
@@ -507,7 +507,7 @@ class Yorumlayici:
             if ad == "bitti":
                 return nesne.bitti
             return nesne.hata and str(nesne.hata)
-        raise TonTypeError("%s uzerinde '%s' yok" % (tur(nesne), ad), satir)
+        raise AxsTypeError("%s uzerinde '%s' yok" % (tur(nesne), ad), satir)
 
     # ------------------------------------------------------------ cagri
     def cagri_dugumu(self, e, kapsam):
@@ -533,20 +533,20 @@ class Yorumlayici:
                 if hedef.yorumlayici_ister:
                     return hedef.fn(self, *args, **isimli)
                 return hedef.fn(*args, **isimli)
-            except TonError:
+            except AxsError:
                 raise
             except TypeError as ex:
                 raise self._cagri_hatasi(hedef.ad, ex, satir)
         if isinstance(hedef, Islev):
             return self.islev_cagir(hedef, args, isimli, satir)
-        raise TonTypeError("%s cagrilamaz" % tur(hedef), satir)
+        raise AxsTypeError("%s cagrilamaz" % tur(hedef), satir)
 
     def islev_cagir(self, islev, args, isimli=None, satir=None):
         isimli = dict(isimli or {})
         kapsam = Kapsam(islev.kapsam)
         adlar = [p[0] for p in islev.parametreler]
         if len(args) > len(adlar):
-            raise TonRuntimeError(
+            raise AxsRuntimeError(
                 "'%s' en fazla %d deger alir, %d verildi" % (islev.ad, len(adlar), len(args)),
                 satir)
         for i, (ad, varsayilan) in enumerate(islev.parametreler):
@@ -557,9 +557,9 @@ class Yorumlayici:
             elif varsayilan is not None:
                 kapsam.yerel(ad, self.degerlendir(varsayilan, kapsam))
             else:
-                raise TonRuntimeError("'%s' icin '%s' degeri verilmedi" % (islev.ad, ad), satir)
+                raise AxsRuntimeError("'%s' icin '%s' degeri verilmedi" % (islev.ad, ad), satir)
         if isimli:
-            raise TonRuntimeError(
+            raise AxsRuntimeError(
                 "'%s' boyle bir deger almiyor: %s" % (islev.ad, ", ".join(isimli)), satir)
         try:
             self.blok(islev.govde, kapsam)
@@ -568,7 +568,7 @@ class Yorumlayici:
         return None
 
     def _cagri_hatasi(self, ad, ex, satir):
-        return TonRuntimeError("'%s' cagrisi hatali: %s" % (ad, ex), satir)
+        return AxsRuntimeError("'%s' cagrisi hatali: %s" % (ad, ex), satir)
 
     # ------------------------------------------------------------ islemler
     def ikili(self, e, kapsam):
@@ -613,19 +613,19 @@ class Yorumlayici:
         if islec == "/":
             _sayi_iste(islec, sol, sag, satir)
             if sag == 0:
-                raise TonRuntimeError("Sifira bolunemez", satir)
+                raise AxsRuntimeError("Sifira bolunemez", satir)
             sonuc = sol / sag
             return int(sonuc) if isinstance(sol, int) and isinstance(sag, int) \
                 and sonuc.is_integer() else sonuc
         if islec == "mod":
             _sayi_iste(islec, sol, sag, satir)
             if sag == 0:
-                raise TonRuntimeError("Sifira bolunemez", satir)
+                raise AxsRuntimeError("Sifira bolunemez", satir)
             return sol % sag
         if islec == "^":
             _sayi_iste(islec, sol, sag, satir)
             return sol ** sag
-        raise TonRuntimeError("Bilinmeyen islec: %s" % islec, satir)
+        raise AxsRuntimeError("Bilinmeyen islec: %s" % islec, satir)
 
 
 def _esit(a, b):
@@ -644,7 +644,7 @@ def _sirala(islec, a, b, satir):
     elif isinstance(a, (list, dict)) and isinstance(b, (list, dict)):
         a, b = len(a), len(b)
     else:
-        raise TonTypeError("%s ile %s karsilastirilamaz" % (tur(a), tur(b)), satir)
+        raise AxsTypeError("%s ile %s karsilastirilamaz" % (tur(a), tur(b)), satir)
     if islec == "<":
         return a < b
     if islec == ">":
@@ -656,5 +656,5 @@ def _sirala(islec, a, b, satir):
 
 def _sayi_iste(islec, a, b, satir):
     if not (sayi_mi(a) and sayi_mi(b)):
-        raise TonTypeError(
+        raise AxsTypeError(
             "'%s' islemi %s ile %s arasinda yapilamaz" % (islec, tur(a), tur(b)), satir)

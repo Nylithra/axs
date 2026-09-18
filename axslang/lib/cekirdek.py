@@ -7,9 +7,9 @@ import random as _random
 import sys
 import time
 
-from ..errors import TonRuntimeError, TonTypeError, TonUserError
+from ..errors import AxsRuntimeError, AxsTypeError, AxsUserError
 from ..values import (dogru_mu, gosterim, metin as _metin, pythonlastir, sayi_mi,
-                      tonlastir, tur as _tur)
+                      axslastir, tur as _tur)
 from . import gomulu, hem
 
 
@@ -43,7 +43,7 @@ def uzunluk(deger):
         return 0
     if isinstance(deger, (str, list, dict, tuple)):
         return len(deger)
-    raise TonTypeError("%s icin uzunluk yok" % _tur(deger))
+    raise AxsTypeError("%s icin uzunluk yok" % _tur(deger))
 
 
 @hem(["metin", "liste", "harita", "sayi", "ondalik", "gorev"], "type", "tur")
@@ -75,7 +75,7 @@ def sayiya(deger, varsayilan=None):
                 pass
     if varsayilan is not None:
         return varsayilan
-    raise TonTypeError("'%s' sayiya cevrilemedi" % _metin(deger))
+    raise AxsTypeError("'%s' sayiya cevrilemedi" % _metin(deger))
 
 
 @gomulu("int", "tam")
@@ -115,9 +115,9 @@ def haritaya(deger=None):
             if isinstance(oge, (list, tuple)) and len(oge) == 2:
                 cikti[_metin(oge[0])] = oge[1]
             else:
-                raise TonTypeError("Haritaya cevirmek icin [anahtar, deger] ciftleri gerekir")
+                raise AxsTypeError("Haritaya cevirmek icin [anahtar, deger] ciftleri gerekir")
         return cikti
-    raise TonTypeError("%s haritaya cevrilemez" % _tur(deger))
+    raise AxsTypeError("%s haritaya cevrilemez" % _tur(deger))
 
 
 @hem(["liste", "harita"], "copy", "kopya")
@@ -136,7 +136,7 @@ def bos_mu(deger):
 
 @gomulu("error", "hata")
 def hata_firlat(mesaj="Hata"):
-    raise TonUserError(_metin(mesaj))
+    raise AxsUserError(_metin(mesaj))
 
 
 @gomulu("exit", "cik")
@@ -149,9 +149,9 @@ def json_oku(ham):
     if isinstance(ham, (dict, list)):
         return ham
     try:
-        return tonlastir(_json.loads(ham))
+        return axslastir(_json.loads(ham))
     except (ValueError, TypeError) as e:
-        raise TonRuntimeError("JSON okunamadi: %s" % e)
+        raise AxsRuntimeError("JSON okunamadi: %s" % e)
 
 
 @hem(["liste", "harita", "metin"], "tojson", "jsonyaz")
@@ -255,7 +255,7 @@ def rastgele(alt=None, ust=None):
     if ust is None:
         alt, ust = 1, alt
     if not (sayi_mi(alt) and sayi_mi(ust)):
-        raise TonTypeError("rastgele(alt, ust) sayi ister")
+        raise AxsTypeError("rastgele(alt, ust) sayi ister")
     if isinstance(alt, int) and isinstance(ust, int):
         return _random.randint(alt, ust)
     return _random.uniform(alt, ust)
@@ -264,7 +264,7 @@ def rastgele(alt=None, ust=None):
 @gomulu("pick", "sec_rastgele")
 def sec_rastgele(liste):
     if not liste:
-        raise TonRuntimeError("Bos listeden secim yapilamaz")
+        raise AxsRuntimeError("Bos listeden secim yapilamaz")
     return _random.choice(list(liste))
 
 

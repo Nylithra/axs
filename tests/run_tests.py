@@ -35,16 +35,16 @@ def calistir(ad):
 def birim_testleri():
     """Cekirdek davranislarini python tarafindan sinar."""
     sys.path.insert(0, KOK)
-    from axslang import calistir as ton_calistir
-    from axslang.errors import TonError, TonSyntaxError
+    from axslang import calistir as axs_calistir
+    from axslang.errors import AxsError, AxsSyntaxError
 
     gecen, kalan = 0, []
 
     def bekle(kaynak, beklenen):
         cikti = []
         try:
-            ton_calistir(kaynak, "<test>", cikti.append)
-        except TonError as e:
+            axs_calistir(kaynak, "<test>", cikti.append)
+        except AxsError as e:
             cikti.append("HATA: " + e.mesaj)
         bulunan = "".join(cikti)
         return bulunan.strip() == beklenen.strip(), bulunan.strip()
@@ -93,7 +93,7 @@ def birim_testleri():
         try:
             calistir_dosya(yol, cikti.append)
             bulunan = "".join(cikti).strip()
-        except TonError as e:
+        except AxsError as e:
             bulunan = "HATA: " + e.mesaj
         finally:
             os.unlink(yol)
@@ -110,11 +110,11 @@ def birim_testleri():
     # yazim hatalari
     for kaynak in ['if 1\nprint: x', 'func f(\n', 'a = %', 'x = [1,']:
         try:
-            ton_calistir(kaynak, "<test>", lambda s: None)
+            axs_calistir(kaynak, "<test>", lambda s: None)
             kalan.append((kaynak, "yazim hatasi", "hata verilmedi"))
-        except TonSyntaxError:
+        except AxsSyntaxError:
             gecen += 1
-        except TonError:
+        except AxsError:
             gecen += 1
     return gecen, kalan
 
@@ -138,7 +138,7 @@ def tarayici_testleri():
 
     sys.path.insert(0, KOK)
     from axslang.derleyici import dosya_derle
-    from axslang.errors import TonError
+    from axslang.errors import AxsError
 
     gecen, kalan = 0, []
     calisma_zamani = os.path.join(KOK, "axsweb", "tarayici", "axs.js")
@@ -174,7 +174,7 @@ def tarayici_testleri():
     for kaynak, beklenen in kucuk_testler:
         try:
             kod = tarayiciya_derle(kaynak, "<tarayici-test>")
-        except TonError as e:
+        except AxsError as e:
             kalan.append((kaynak, beklenen, e.rapor()))
             continue
         p2 = subprocess.run(
@@ -187,13 +187,13 @@ def tarayici_testleri():
             kalan.append((kaynak, beklenen, bulunan))
 
     # 3) test dosyalari ayni ciktiyi veriyor mu?
-    gecici = tempfile.mkdtemp(prefix="ton-js-")
+    gecici = tempfile.mkdtemp(prefix="axs-js-")
     try:
         for ad in TARAYICI_DURUMLARI:
             kaynak = os.path.join(KUTU, ad + ".axs")
             try:
                 kod = dosya_derle(kaynak)
-            except TonError as e:
+            except AxsError as e:
                 kalan.append((ad, "derlenmeli", e.rapor()))
                 continue
             js_yolu = os.path.join(gecici, ad + ".js")
@@ -230,7 +230,7 @@ def jston_testleri():
         return 0, [], True
 
     sys.path.insert(0, KOK)
-    from axslang.errors import TonError
+    from axslang.errors import AxsError
     from axslang.jston import dosya_cevir
 
     gecen, kalan = 0, []
@@ -245,19 +245,19 @@ def jston_testleri():
             js_cikti = p_js.stdout + p_js.stderr
             try:
                 kod, _uyarilar = dosya_cevir(js_yolu)
-            except TonError as e:
+            except AxsError as e:
                 kalan.append((ad, "cevrilmeli", e.rapor()))
                 continue
-            ton_yolu = os.path.join(gecici, os.path.splitext(ad)[0] + ".axs")
-            with open(ton_yolu, "w", encoding="utf-8") as f:
+            axs_yolu = os.path.join(gecici, os.path.splitext(ad)[0] + ".axs")
+            with open(axs_yolu, "w", encoding="utf-8") as f:
                 f.write(kod)
-            p_ton = subprocess.run([sys.executable, AXS, ton_yolu],
+            p_axs = subprocess.run([sys.executable, AXS, axs_yolu],
                                    capture_output=True, text=True, timeout=120)
-            ton_cikti = p_ton.stdout + p_ton.stderr
-            if js_cikti == ton_cikti:
+            axs_cikti = p_axs.stdout + p_axs.stderr
+            if js_cikti == axs_cikti:
                 gecen += 1
             else:
-                kalan.append((ad, js_cikti.strip()[:200], ton_cikti.strip()[:200]))
+                kalan.append((ad, js_cikti.strip()[:200], axs_cikti.strip()[:200]))
     finally:
         shutil.rmtree(gecici, ignore_errors=True)
     return gecen, kalan, False
@@ -287,7 +287,7 @@ KOMUTLAR = {
         {"name": "topla", "options": [{"name": "bir", "type": 4, "value": 15},
                                       {"name": "iki", "type": 4, "value": 27}]},
         {"name": "yanki", "options": [{"name": "metin", "type": 3,
-                                       "value": "merhaba TON"}]},
+                                       "value": "merhaba Axs"}]},
         {"name": "olmayan"},
     ],
 }
@@ -432,7 +432,7 @@ def main():
         print("\njston testleri (JavaScript -> AXS, node ile ayni cikti): "
               "%d gecti, %d kaldi" % (jgecen, len(jkalan)))
     for ad, beklenen, bulunan in jkalan:
-        print("  KALDI %s\n    node: %s\n    ton : %s" % (ad, beklenen, bulunan))
+        print("  KALDI %s\n    node: %s\n    axs : %s" % (ad, beklenen, bulunan))
 
     agecen, akalan, aatlandi = ag_testleri()
     if not aatlandi:

@@ -1,11 +1,11 @@
-# Basit bir web sitesi.  Calistir:  ton examples/web_site.ton
+# Basit bir web sitesi.  Calistir:  axs examples/web_site.axs
 # Sonra tarayicida ac: http://localhost:8080
 
 use web
 
 func anasayfa(istek)
   govde = """
-    <h1>TON Web</h1>
+    <h1>Axs Web</h1>
     <p>Bu sayfa <b>axsweb</b> ile yazildi.</p>
     <p><a href='/selam/dunya'>Selam sayfasi</a> - <a href='/api/saat'>API</a></p>
     <form action='/mesaj' method='post'>
@@ -13,7 +13,7 @@ func anasayfa(istek)
       <button>Gonder</button>
     </form>
   """
-  return web.html(baslik: "TON Web", govde: govde)
+  return web.html(baslik: "Axs Web", govde: govde)
 end
 
 func selam(istek)

@@ -1,24 +1,24 @@
-# TON'a hosgeldin!  Calistirmak icin:  ton examples/main.ton
+# Axs'e hosgeldin!  Calistirmak icin:  axs examples/main.axs
 
 ad = "Dunya"
 
-print: Merhaba %ad%!
+print: Merhaba ad;!
 
-# --- degiskenler her zaman %ad% ile okunur ---
+# --- yazi icinde degisken okumak icin  ad;  ---
 sayi = 42
 ondalik = 3.14
-liste = ["ton", "tn", "nyl", "tnl"]
+liste = ["axs", "nyl"]
 kisi = {ad: "Nyl", yas: 20}
 
-print: Sayi: %sayi%, ondalik: %ondalik%
-print: Uzantilar: %liste%
-print: Kisi: %kisi.ad% (%kisi.yas%)
+print: Sayi: sayi;, ondalik: ondalik;
+print: Uzantilar: liste;
+print: Kisi: kisi.ad; (kisi.yas;)
 
-# --- hesap yapmak icin %( ... )% ---
-print: Iki kati: %(%sayi% * 2)%
+# --- yazi icinde hesap yapmak icin  (ifade);  ---
+print: Iki kati: (sayi * 2);
 
 # --- kosullar ---
-if %sayi% > 40
+if sayi > 40
   print: Sayi buyuk
 else
   print: Sayi kucuk
@@ -26,17 +26,17 @@ end
 
 # --- donguler ---
 repeat 3 as i
-  print: %i%. tekrar
+  print: i;. tekrar
 end
 
-for uzanti in %liste%
-  print: .%uzanti% dosyalari calisir
+for uzanti in liste
+  print: ("." + uzanti); dosyalari calisir
 end
 
 # --- isler ---
 func selamla(kisi, selam = "Merhaba")
-  return %selam% + ", " + %kisi% + "!"
+  return selam + ", " + kisi + "!"
 end
 
-print: %(selamla("TON"))%
-print: %(selamla("Nyl", "Selam"))%
+print: (selamla("Axs"));
+print: (selamla("Nyl", "Selam"));

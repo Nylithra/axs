@@ -1,5 +1,5 @@
 # Tarayicida calisan sayac.
-#   ton paket examples/tarayici/sayac.ton
+#   axs paket examples/tarayici/sayac.axs
 # Yanindaki sayac.govde.html sayfanin govdesi olur.
 
 sayi = saklanan("sayi", 0)

@@ -1,16 +1,16 @@
-# TON Tarayıcıda
+# Axs Tarayıcıda
 
-Aynı TON kodu tarayıcıda da çalışır. `ton` komutu TON'u JavaScript'e çevirir,
-`ton.js` de dilin hazır işlerini tarayıcıda sağlar. Ek hiçbir araç gerekmez —
+Aynı Axs kodu tarayıcıda da çalışır. `axs` komutu Axs'u JavaScript'e çevirir,
+`axs.js` de dilin hazır işlerini tarayıcıda sağlar. Ek hiçbir araç gerekmez —
 npm yok, derleme kurulumu yok.
 
-```ton
+```axs
 sayi = saklanan("sayi", 0)
 
 func arttir(olay)
   sayi += 1
-  yaz_metin("#sayi", %sayi%)
-  sakla("sayi", %sayi%)
+  yaz_metin("#sayi", sayi)
+  sakla("sayi", sayi)
 end
 
 tikla("#arttir", arttir)
@@ -20,10 +20,10 @@ tikla("#arttir", arttir)
 
 ## Üç çalıştırma yolu
 
-### 1. Tek dosya — `ton paket`
+### 1. Tek dosya — `axs paket`
 
 ```bash
-ton paket sayac.ton
+axs paket sayac.axs
 ```
 
 `sayac.html` çıkar: içinde çalışma zamanı da derlenmiş kod da gömülüdür.
@@ -32,14 +32,14 @@ ton paket sayac.ton
 Yanında `<ad>.govde.html` varsa, onun içeriği sayfanın gövdesi olur:
 
 ```
-sayac.ton            <- kod
+sayac.axs            <- kod
 sayac.govde.html     <- sayfanın HTML gövdesi (isteğe bağlı)
-sayac.html           <- `ton paket` çıktısı
+sayac.html           <- `axs paket` çıktısı
 ```
 
 ### 2. Sunucuyla — `web.uygulama`
 
-```ton
+```axs
 use web
 
 func liste(istek)
@@ -47,35 +47,35 @@ func liste(istek)
 end
 
 web.api("/api/liste", liste)
-web.uygulama("/", "tarayici/uygulamam.ton")
+web.uygulama("/", "tarayici/uygulamam.axs")
 
 web.serve(8080)
 ```
 
 Her istekte yeniden derlenir: dosyayı kaydet, sayfayı yenile, yeter.
 
-### 3. Sadece JavaScript — `ton derle`
+### 3. Sadece JavaScript — `axs derle`
 
 ```bash
-ton derle uygulamam.ton -o uygulamam.js
+axs derle uygulamam.axs -o uygulamam.js
 ```
 
 Kendi HTML'ine koyacaksan:
 
 ```html
-<script src="ton.js"></script>
+<script src="axs.js"></script>
 <script src="uygulamam.js"></script>
 ```
 
-`ton.js` dosyası `axsweb/tarayici/ton.js` içindedir.
+`axs.js` dosyası `axsweb/tarayici/axs.js` içindedir.
 
 ---
 
 ## Tek fark: her şey beklenebilir
 
-Tarayıcıda ağ işleri normalde geri çağrı (callback) ister. TON'da istemez:
+Tarayıcıda ağ işleri normalde geri çağrı (callback) ister. Axs'da istemez:
 
-```ton
+```axs
 notlar = get("/api/notlar")        # düz görünür, arka planda fetch olur
 sonuc = post("/api/ekle", {metin: "selam"})
 wait(2)                            # 2 saniye bekler
@@ -90,7 +90,7 @@ Yani çekirdekte yazdığın kod tarayıcıda da aynı sırayla akar.
 
 ### Seçme
 
-```ton
+```axs
 kutu = oge("#kutu")            # tek öge (yoksa null)
 satirlar = ogeler(".satir")    # hepsi, liste olarak
 ```
@@ -116,38 +116,40 @@ satirlar = ogeler(".satir")    # hepsi, liste olarak
 
 ### Olaylar
 
-```ton
+```axs
 func tiklandi(olay)
-  print: tiklandi: %olay.hedef%
+  print: tiklandi: olay.hedef;
 end
 
 tikla("#dugme", tiklandi)
 gonderim("#form", gonder)      # form gönderimi (sayfa yenilenmez)
 tus("#arama", yazilinca)       # klavye
-olay("#kutu", "mouseover", is) # herhangi bir olay
+olay("#kutu", "mouseover", uzerine_gelindi)   # herhangi bir olay
 sayfa_hazir(basla)             # sayfa yüklenince
 ```
 
-Olay işine gelen harita: `%olay.tur%`, `%olay.deger%`, `%olay.tus%`,
-`%olay.hedef%` ve ögedeki `data-...` değerleri.
+Olay işine gelen harita: `olay.tur`, `olay.deger`, `olay.tus`,
+`olay.hedef` ve ögedeki `data-...` değerleri.
 
 ### Saklama ve sayfa
 
-```ton
-sakla("ad", %deger%)              # localStorage
+```axs
+sakla("ad", deger)              # localStorage
 deger = saklanan("ad", varsayilan)
 sakli_sil("ad")
 
 git("/baska-sayfa")
 sayfa_basligi("Yeni başlık")
-uyari("dikkat")  ·  onay("emin misin?")  ·  sor("adın ne?")
+uyari("dikkat")
+cevap = onay("emin misin?")
+isim = sor("adın ne?")
 form_verisi("#form")              # bütün alanları harita olarak verir
 ```
 
 ### `print:` nereye yazar?
 
-Konsola yazar; sayfada `id="ton-cikti"` olan bir öge varsa oraya da ekler.
-`ton paket` ile üretilen sayfada bu öge hazır gelir (boşken görünmez).
+Konsola yazar; sayfada `id="axs-cikti"` olan bir öge varsa oraya da ekler.
+`axs paket` ile üretilen sayfada bu öge hazır gelir (boşken görünmez).
 
 ---
 
@@ -169,13 +171,13 @@ Bunları tarayıcı kodunda kullanırsan **derlerken** anlaşılır bir hata al�
 `ai()` tarayıcıda çalışır ama isteği kendi sunucuna gönderir — anahtarın
 tarayıcıya inmesin diye:
 
-```ton
+```axs
 # sunucu tarafı
 ai_setup(saglayici: "groq", key: "gsk_...")
 web.ai_ucu("/api/ai")      # anahtar sunucuda kalır
 ```
 
-```ton
+```axs
 # tarayıcı tarafı
 ai = "groq"                # sağlayıcı seçimi sunucuya iletilir
 cevap = ai("merhaba")
@@ -186,7 +188,7 @@ cevap = ai("merhaba")
 1. **Olmayan değişken**: çekirdekte çalışırken hata verir, tarayıcıda
    **derlenirken** hata verir. Yani yazım hataları daha erken yakalanır.
 2. **Sayı gibi görünen harita anahtarları**: JavaScript bunları küçükten
-   büyüğe sıralar. `group(%liste%, "yas")` sonucunun sırası tarayıcıda
+   büyüğe sıralar. `group(liste, "yas")` sonucunun sırası tarayıcıda
    farklı olabilir. Sıra önemliyse anahtarı metne çevir.
 
 ---
@@ -194,6 +196,6 @@ cevap = ai("merhaba")
 ## Örnekler
 
 ```bash
-ton paket examples/tarayici/sayac.ton      # tek dosyalık sayaç
-ton examples/tarayici_sunucu.ton           # sunucu + tarayıcı birlikte
+axs paket examples/tarayici/sayac.axs      # tek dosyalık sayaç
+axs examples/tarayici_sunucu.axs           # sunucu + tarayıcı birlikte
 ```

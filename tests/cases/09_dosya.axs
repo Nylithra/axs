@@ -7,7 +7,7 @@ print(read("_gecici/yok.txt", "varsayilan icerik"))
 print(files("_gecici"))
 print(size("_gecici/not.txt") > 0)
 
-veri = {ad: "Nyl", diller: ["ton", "tnl"]}
+veri = {ad: "Nyl", diller: ["axs", "nyl"]}
 save("_gecici/veri.json", tojson(veri))
 geri = json(read("_gecici/veri.json"))
 print(geri.ad, geri.diller[1])

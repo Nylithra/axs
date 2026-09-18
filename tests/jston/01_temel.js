@@ -6,7 +6,7 @@ console.log(a + b, a - b, a * b, a / b, a % b, a ** 2);
 console.log(a > b, a === 5, a !== b, !(a < b));
 console.log("merhaba" + " " + "dunya");
 console.log(`a=${a} b=${b} toplam=${a + b}`);
-console.log("TON".toUpperCase(), "TON".toLowerCase(), "  bosluk  ".trim());
+console.log("Axs".toUpperCase(), "Axs".toLowerCase(), "  bosluk  ".trim());
 console.log("a,b,c".split(",").join("-"));
 console.log("merhaba".length, "merhaba".slice(0, 3), "merhaba".includes("hab"));
 console.log("merhaba".replace("a", "A"), "merhaba".startsWith("mer"));

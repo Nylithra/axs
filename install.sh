@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-# TON kurulumu: `ton` komutunu her yerden calisir hale getirir.
-#   ./install.sh            -> ~/.local/bin/ton
+# Axs yerel kurulumu: `axs` komutunu her yerden calisir hale getirir.
+#   ./install.sh            -> ~/.local/bin/axs
 #   ./install.sh /usr/local/bin
 
 set -e
@@ -20,10 +20,10 @@ python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 8) else 1)' || {
 }
 
 mkdir -p "$HEDEF"
-ln -sf "$KOK/ton" "$HEDEF/ton"
-chmod +x "$KOK/ton"
+ln -sf "$KOK/axs" "$HEDEF/axs"
+chmod +x "$KOK/axs"
 
-echo "TON kuruldu: $HEDEF/ton  (python $SURUM)"
+echo "Axs kuruldu: $HEDEF/axs  (python $SURUM)"
 
 case ":$PATH:" in
   *":$HEDEF:"*) ;;
@@ -31,4 +31,4 @@ case ":$PATH:" in
      echo "  export PATH=\"\$PATH:$HEDEF\"" ;;
 esac
 
-echo "Deneme: ton -e 'print: merhaba'"
+echo "Deneme: axs -e 'print: merhaba'"

@@ -13,7 +13,7 @@ Anahtar ya ortam degiskeninden gelir (GROQ_API_KEY gibi) ya da elle verilir:
 
 import os
 
-from ..errors import TonRuntimeError
+from ..errors import AxsRuntimeError
 from ..values import metin as _metin
 from . import gomulu
 from .ag import _istek
@@ -143,7 +143,7 @@ def _secili(y=None, saglayici=None):
         if ad is None:
             ad = "claude"
     if ad not in SAGLAYICILAR:
-        raise TonRuntimeError(
+        raise AxsRuntimeError(
             "'%s' diye bir yapay zeka saglayicisi yok. Secenekler: %s"
             % (_metin(saglayici or ad), ", ".join(SIRA)))
     return ad
@@ -156,7 +156,7 @@ def zeka_ayarla(y, key=None, model=None, url=None, kisilik=None, sinir=None,
     ad = _ad_coz(saglayici) if saglayici else _secili(y)
     if saglayici:
         if ad not in SAGLAYICILAR:
-            raise TonRuntimeError("'%s' diye bir saglayici yok. Secenekler: %s"
+            raise AxsRuntimeError("'%s' diye bir saglayici yok. Secenekler: %s"
                                   % (_metin(saglayici), ", ".join(SIRA)))
         AYAR["saglayici"] = ad
         # `ai` degiskeni ile ayni seyi anlatsinlar: ikisi de secili saglayici.
@@ -310,7 +310,7 @@ def zeka(y, soru, model=None, kisilik=None, sinir=None, saglayici=None):
     ad = _secili(y, saglayici)
     anahtar = _anahtar_bul(ad) or _genel_anahtar()
     if not anahtar:
-        raise TonRuntimeError(
+        raise AxsRuntimeError(
             "%s icin anahtar yok. %s ortam degiskenini ayarla ya da "
             "ai_setup(key: \"...\") yaz. Saglayicilari gormek icin: ai_saglayicilar()"
             % (SAGLAYICILAR[ad]["baslik"], SAGLAYICILAR[ad]["anahtar_adlari"][0]))
@@ -323,7 +323,7 @@ def zeka(y, soru, model=None, kisilik=None, sinir=None, saglayici=None):
                                          sinir, anahtar)
     cevap = _istek("POST", adres, govde, basliklar, zaman_asimi=120)
     if not cevap["basarili"]:
-        raise TonRuntimeError(_hata_mesaji(ad, model, cevap))
+        raise AxsRuntimeError(_hata_mesaji(ad, model, cevap))
     return _cevabi_ayikla(cevap["veri"])
 
 
@@ -333,7 +333,7 @@ def zeka_modeller(y, saglayici=None):
     ad = _secili(y, saglayici)
     anahtar = _anahtar_bul(ad) or _genel_anahtar()
     if not anahtar:
-        raise TonRuntimeError("%s icin anahtar yok." % SAGLAYICILAR[ad]["baslik"])
+        raise AxsRuntimeError("%s icin anahtar yok." % SAGLAYICILAR[ad]["baslik"])
     adres = _ayar(ad, "modeller_adresi") or SAGLAYICILAR[ad]["modeller_adresi"]
     bicim = SAGLAYICILAR[ad]["bicim"]
     if bicim == "anthropic":
@@ -344,7 +344,7 @@ def zeka_modeller(y, saglayici=None):
         basliklar = {"Authorization": "Bearer " + anahtar}
     cevap = _istek("GET", adres, None, basliklar)
     if not cevap["basarili"]:
-        raise TonRuntimeError(_hata_mesaji(ad, "", cevap))
+        raise AxsRuntimeError(_hata_mesaji(ad, "", cevap))
     veri = cevap["veri"]
     adlar = []
     if isinstance(veri, dict):

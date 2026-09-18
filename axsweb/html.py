@@ -52,7 +52,7 @@ def etiket(ad, icerik="", **ozellikler):
     return "<%s%s>%s</%s>" % (ad, ozellik_metni, _metin(icerik), ad)
 
 
-def sayfa(baslik="TON", govde="", stil=None, bas=None, dil="tr", betik=None):
+def sayfa(baslik="Axs", govde="", stil=None, bas=None, dil="tr", betik=None):
     if isinstance(govde, (list, tuple)):
         govde = "\n".join(_metin(p) for p in govde)
     stil_metni = VARSAYILAN_STIL if stil is None else _metin(stil)

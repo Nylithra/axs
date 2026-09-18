@@ -25,7 +25,7 @@ if not ai_ready()
 end
 
 # --- duz soru ---
-print: (ai("Bir cumleyle TON dilini tanit"));
+print: (ai("Bir cumleyle Axs dilini tanit"));
 
 # --- JSON isteyerek ---
 veri = ai_json("Turkiye'nin 3 buyuk sehrini {sehirler: [...]} bicimde ver")

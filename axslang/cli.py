@@ -1,9 +1,9 @@
-"""`ton` komut satiri araci."""
+"""`axs` komut satiri araci."""
 
 import os
 import sys
 
-from .errors import TonError
+from .errors import AxsError
 from .interpreter import Yorumlayici
 from .surum import SURUM, SURUM_ADI, UZANTILAR
 
@@ -54,11 +54,11 @@ def _boru_kapandi():
 
 
 def _hata_yaz(e):
-    sys.stderr.write(e.rapor() + "\n" if isinstance(e, TonError) else str(e) + "\n")
+    sys.stderr.write(e.rapor() + "\n" if isinstance(e, AxsError) else str(e) + "\n")
 
 
 def dosya_coz(ad):
-    """Uzantisi yazilmamis dosyalari da bulur: `ton main` -> main.ton"""
+    """Uzantisi yazilmamis dosyalari da bulur: `axs main` -> main.axs"""
     if os.path.isfile(ad):
         return ad
     for u in UZANTILAR:
@@ -72,7 +72,7 @@ def calistir_dosya(yol, argv):
     try:
         y.calistir_dosya(yol)
         return 0
-    except TonError as e:
+    except AxsError as e:
         _hata_yaz(e)
         return 1
     except SystemExit as e:
@@ -81,7 +81,7 @@ def calistir_dosya(yol, argv):
         sys.stderr.write("Calisma hatasi: is kendini cok fazla cagirdi (sonsuz dongu?)\n")
         return 1
     except BrokenPipeError:
-        # `ton dosya.ton | head` gibi: karsi taraf okumayi birakti
+        # `axs dosya.axs | head` gibi: karsi taraf okumayi birakti
         _boru_kapandi()
         return 0
     except KeyboardInterrupt:
@@ -94,7 +94,7 @@ def kontrol(yol):
     from .parser import cozumle
     try:
         cozumle(dosya_oku(yol), yol)
-    except TonError as e:
+    except AxsError as e:
         _hata_yaz(e)
         return 1
     except OSError as e:
@@ -107,18 +107,18 @@ def kontrol(yol):
 def yeni_proje(ad):
     klasor = os.path.abspath(ad)
     os.makedirs(klasor, exist_ok=True)
-    ana = os.path.join(klasor, "main.ton")
+    ana = os.path.join(klasor, "main.axs")
     if os.path.exists(ana):
         sys.stderr.write("Zaten var: %s\n" % ana)
         return 1
     with open(ana, "w", encoding="utf-8") as f:
         f.write(ORNEK % os.path.basename(klasor))
-    print("Olusturuldu: %s\nCalistirmak icin: axs %s" % (ana, os.path.join(ad, "main.ton")))
+    print("Olusturuldu: %s\nCalistirmak icin: axs %s" % (ana, os.path.join(ad, "main.axs")))
     return 0
 
 
 def derle_komutu(argv, paket):
-    """ton derle / ton paket"""
+    """axs derle / axs paket"""
     if not argv:
         sys.stderr.write("Kaynak dosya gerekli\n")
         return 1
@@ -146,7 +146,7 @@ def derle_komutu(argv, paket):
         sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         from axsweb.paket import derle as tarayiciya_derle, sayfa
         icerik = sayfa(yol) if paket else tarayiciya_derle(yol)
-    except TonError as e:
+    except AxsError as e:
         _hata_yaz(e)
         return 1
     except ImportError:
@@ -331,7 +331,7 @@ def paket_kaldir(ad):
 
 
 def jston_komutu(argv):
-    """ton jston <dosya.js> [-o cikti.ton]"""
+    """ton jston <dosya.js> [-o cikti.axs]"""
     cikti_yolu = None
     dosyalar = []
     i = 0
@@ -355,7 +355,7 @@ def jston_komutu(argv):
     from .jston import dosya_cevir
     try:
         kod, uyarilar = dosya_cevir(kaynak_yolu)
-    except TonError as e:
+    except AxsError as e:
         _hata_yaz(e)
         return 1
     if cikti_yolu == "-":
@@ -402,7 +402,7 @@ def kabuk():
     tampon = []
     while True:
         try:
-            istem = "... " if tampon else "ton> "
+            istem = "... " if tampon else "axs> "
             satir = input(istem)
         except (EOFError, KeyboardInterrupt):
             print()
@@ -431,7 +431,7 @@ def kabuk():
                 print(metin(sonuc))
         except SystemExit:
             return 0
-        except TonError as e:
+        except AxsError as e:
             _hata_yaz(e)
         except KeyboardInterrupt:
             print()
@@ -468,7 +468,7 @@ def main(argv=None):
         except BrokenPipeError:
             _boru_kapandi()
             return 0
-        except TonError as e:
+        except AxsError as e:
             _hata_yaz(e)
             return 1
         except SystemExit as e:
@@ -495,7 +495,7 @@ def main(argv=None):
             sys.stderr.write("Silinecek paket adi gerekli\n")
             return 1
         return paket_kaldir(argv[1])
-    if ilk in ("jston", "js2ton", "cevir"):
+    if ilk in ("cevir", "jston", "js2axs"):
         return jston_komutu(argv[1:])
     if ilk in ("yeni", "new"):
         if len(argv) < 2:

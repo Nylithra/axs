@@ -3,7 +3,7 @@
 import os
 import shutil
 
-from ..errors import TonRuntimeError
+from ..errors import AxsRuntimeError
 from ..values import metin as _metin
 from . import gomulu
 
@@ -21,7 +21,7 @@ def oku(y, dosya, varsayilan=None):
     if not os.path.isfile(yol):
         if varsayilan is not None:
             return varsayilan
-        raise TonRuntimeError("Dosya bulunamadi: %s" % _metin(dosya))
+        raise AxsRuntimeError("Dosya bulunamadi: %s" % _metin(dosya))
     from ..okuma import dosya_oku
     return dosya_oku(yol)
 

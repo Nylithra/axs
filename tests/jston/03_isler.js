@@ -2,7 +2,7 @@ function selamla(ad, selam = "Merhaba") {
   return selam + ", " + ad + "!";
 }
 console.log(selamla("Nyl"));
-console.log(selamla("TON", "Selam"));
+console.log(selamla("Axs", "Selam"));
 
 function fakt(n) {
   if (n <= 1) return 1;

@@ -1,24 +1,24 @@
 @echo off
-rem TON dilinin Windows calistiricisi.  Kullanim:  ton main.ton
+rem Axs dilinin Windows calistiricisi.  Kullanim:  axs main.axs
 setlocal
 
-set "TON_KOK=%~dp0"
-set "TON_PY="
+set "AXS_KOK=%~dp0"
+set "AXS_PY="
 
 where py >nul 2>nul
-if not errorlevel 1 set "TON_PY=py -3"
+if not errorlevel 1 set "AXS_PY=py -3"
 
-if not defined TON_PY (
+if not defined AXS_PY (
   where python >nul 2>nul
-  if not errorlevel 1 set "TON_PY=python"
+  if not errorlevel 1 set "AXS_PY=python"
 )
 
-if not defined TON_PY (
+if not defined AXS_PY (
   where python3 >nul 2>nul
-  if not errorlevel 1 set "TON_PY=python3"
+  if not errorlevel 1 set "AXS_PY=python3"
 )
 
-if not defined TON_PY (
+if not defined AXS_PY (
   echo Python 3 bulunamadi.
   echo.
   echo Kurmak icin:  winget install Python.Python.3.12
@@ -27,4 +27,4 @@ if not defined TON_PY (
   exit /b 1
 )
 
-%TON_PY% "%TON_KOK%ton" %*
+%AXS_PY% "%AXS_KOK%axs" %*

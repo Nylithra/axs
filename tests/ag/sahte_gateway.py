@@ -89,7 +89,7 @@ def oturum(baglanti, kayit):
             cerceve_yaz(baglanti, json.dumps({
                 "op": 0, "s": 1, "t": "READY",
                 "d": {"session_id": "OTURUM1",
-                      "user": {"id": 1, "username": "ton_bot"},
+                      "user": {"id": 1, "username": "axs_bot"},
                       "application": {"id": os.environ.get("SAHTE_UYGULAMA", "UYG1")}}}))
             # tek cercevede birden cok olay: sunucunun yaptigi gibi
             icerikler = json.loads(os.environ.get("SAHTE_MESAJLAR", '["!selam", "!zar"]'))

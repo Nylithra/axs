@@ -31,7 +31,7 @@ for s in [1, 2, 3, 4, 5]
 end
 print: tek toplam toplam;
 
-for harf in "ton"
+for harf in "axs"
   print: harf harf;
 end
 

@@ -1,11 +1,11 @@
 # ============================================================
-#  TON  —  Jubbio moderasyon ve destek botu
+#  TON bot  —  Jubbio moderasyon ve destek botu
 #
 #  Kurulum:
 #    1. .env dosyasi olustur:
 #         JUBB_TOKEN=bot_tokenin
 #         JUBB_SUNUCU=sunucu_kimligin
-#    2. ton bot.ton
+#    2. axs bot.axs
 #    3. Sunucuda /destek-ayarla ve /koruma ile ayarla
 # ============================================================
 

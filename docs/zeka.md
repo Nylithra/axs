@@ -1,11 +1,11 @@
 # Yapay Zekâ
 
-TON beş sağlayıcıyla çalışır. Seçmek tek satır:
+Axs beş sağlayıcıyla çalışır. Seçmek tek satır:
 
-```ton
+```axs
 ai = "groq"
 
-print: %(ai("Bana bir fıkra anlat"))%
+print: (ai("Bana bir fıkra anlat"));
 ```
 
 | `ai = "..."` | Sağlayıcı | Anahtar (ortam değişkeni) | Varsayılan model |
@@ -28,7 +28,7 @@ print: %(ai("Bana bir fıkra anlat"))%
 export GROQ_API_KEY="gsk_..."        # 1. ortam değişkeni
 ```
 
-```ton
+```axs
 ai_setup(key: "gsk_...")                       # 2. seçili sağlayıcı için
 ai_setup(saglayici: "gemini", key: "AIza...")  # 3. belirli bir sağlayıcı için
 ```
@@ -40,10 +40,10 @@ Her sağlayıcının anahtarı ayrı tutulur: `ai = "groq"` deyip sonra
 
 Öncelik sırasıyla:
 
-```ton
+```axs
 ai("soru", saglayici: "grok")    # 1. sadece bu çağrı için
 ai = "groq"                      # 2. o andan sonrası için
-ai_setup(saglayici: "gemini")    # 3. (yukarıdakiyle aynı şey — %ai% de değişir)
+ai_setup(saglayici: "gemini")    # 3. (yukarıdakiyle aynı şey — ai de değişir)
                                  # 4. hiçbiri yoksa: anahtarı olan ilk sağlayıcı
 ```
 
@@ -60,9 +60,9 @@ ai_setup(saglayici: "gemini")    # 3. (yukarıdakiyle aynı şey — %ai% de de�
 | `ai_saglayicilar()` | Beşinin durumu |
 | `ai_modeller()` | Sağlayıcının **canlı** model listesi |
 
-```ton
+```axs
 ai = "groq"
-print: %(ai_ayar())%
+print: (ai_ayar());
 # {saglayici: "groq", baslik: "Groq", model: "openai/gpt-oss-120b", ...}
 ```
 
@@ -71,13 +71,13 @@ print: %(ai_ayar())%
 Varsayılan modeller zamanla eskir — sağlayıcılar model kapatır. Canlı listeyi
 sor, sonra seç:
 
-```ton
+```axs
 ai = "groq"
-print: %(ai_modeller())%
+print: (ai_modeller());
 ai_setup(model: "openai/gpt-oss-20b")
 ```
 
-Model adı geçersizse TON bunu açıkça söyler:
+Model adı geçersizse Axs bunu açıkça söyler:
 
 ```
 'abc' modeli Groq için geçerli değil. Geçerli modelleri görmek için
@@ -86,7 +86,7 @@ ai_modeller() yaz, sonra ai_setup(model: "...") ile seç.
 
 ## Kişilik ve uzunluk
 
-```ton
+```axs
 ai_setup(kisilik: "Kısa ve Türkçe konuş", sinir: 2048)
 ```
 
@@ -95,39 +95,39 @@ ai_setup(kisilik: "Kısa ve Türkçe konuş", sinir: 2048)
 Tarayıcıda API anahtarı tutulmaz — istek **kendi sunucuna** gider, anahtar
 orada kalır:
 
-```ton
+```axs
 # sunucu tarafı
 use web
 ai_setup(saglayici: "groq", key: "gsk_...")
 web.ai_ucu("/api/ai")
-web.uygulama("/", "sohbet.ton")
+web.uygulama("/", "sohbet.axs")
 web.serve(8080)
 ```
 
-```ton
-# tarayıcı tarafı (sohbet.ton)
+```axs
+# tarayıcı tarafı (sohbet.axs)
 ai = "groq"
 cevap = ai("merhaba")      # /api/ai'ye gider, sunucu sağlayıcıya sorar
-yaz_metin("#cevap", %cevap%)
+yaz_metin("#cevap", cevap)
 ```
 
 ## Kendi uç noktan
 
 OpenAI uyumlu bir sunucun varsa (yerel model, vekil sunucu, kurum içi API):
 
-```ton
+```axs
 ai_setup(saglayici: "chatgpt", url: "http://localhost:11434/v1/chat/completions",
          key: "gerekmez", model: "llama3")
 ```
 
 ## Neden `ai = "groq"` çalışıyor?
 
-`ai` hem bir hazır iş hem de bir değişken olabilir. TON'da değişkenler `%ai%`
-ile okunduğu için karışıklık olmaz: `ai("soru")` çağrı, `%ai%` ise seçtiğin
+`ai` hem bir hazır iş hem de bir değişken olabilir. Çıplak ad önce
+değişkenlere baktığı için karışıklık olmaz: `ai("soru")` çağrı, `ai` ise seçtiğin
 sağlayıcının adı.
 
-```ton
+```axs
 ai = "groq"
-print: %ai%              # groq
-print: %(ai("selam"))%   # Groq'un cevabı
+print: ai;              # groq
+print: (ai("selam"));   # Groq'un cevabı
 ```

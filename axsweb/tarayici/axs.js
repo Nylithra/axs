@@ -14,19 +14,19 @@
   T.ai_adres = "/api/ai";
 
   // ------------------------------------------------------------------ hata
-  function TonHata(mesaj) {
+  function AxsHata(mesaj) {
     var e = new Error(mesaj);
-    e.ton = true;
+    e.axs = true;
     e.mesaj = mesaj;
     return e;
   }
-  T.hata_at = function (mesaj) { throw TonHata(mesaj); };
+  T.hata_at = function (mesaj) { throw AxsHata(mesaj); };
   T.hata_metni = function (e) {
     if (!e) return "bilinmeyen hata";
     return e.mesaj || e.message || String(e);
   };
   T.eksik = function (is_adi, parametre) {
-    throw TonHata("'" + is_adi + "' icin '" + parametre + "' degeri verilmedi");
+    throw AxsHata("'" + is_adi + "' icin '" + parametre + "' degeri verilmedi");
   };
 
   // ------------------------------------------------------------------ turler
@@ -97,7 +97,7 @@
   // ------------------------------------------------------------------ islemler
   function sayi_iste(islec, a, b) {
     if (!sayi_mi(a) || !sayi_mi(b)) {
-      throw TonHata("'" + islec + "' islemi " + T.tur(a) + " ile " + T.tur(b) +
+      throw AxsHata("'" + islec + "' islemi " + T.tur(a) + " ile " + T.tur(b) +
                     " arasinda yapilamaz");
     }
   }
@@ -120,17 +120,17 @@
   };
   T.bol = function (a, b) {
     sayi_iste("/", a, b);
-    if (b === 0) throw TonHata("Sifira bolunemez");
+    if (b === 0) throw AxsHata("Sifira bolunemez");
     return a / b;
   };
   T.kalan = function (a, b) {
     sayi_iste("mod", a, b);
-    if (b === 0) throw TonHata("Sifira bolunemez");
+    if (b === 0) throw AxsHata("Sifira bolunemez");
     return a % b;
   };
   T.us = function (a, b) { sayi_iste("^", a, b); return Math.pow(a, b); };
   T.eksi = function (a) {
-    if (!sayi_mi(a)) throw TonHata("'-' sadece sayilarda kullanilir");
+    if (!sayi_mi(a)) throw AxsHata("'-' sadece sayilarda kullanilir");
     return -a;
   };
 
@@ -160,7 +160,7 @@
     if ((Array.isArray(a) || harita_mi(a)) && (Array.isArray(b) || harita_mi(b))) {
       return [uzunluk(a), uzunluk(b)];
     }
-    throw TonHata(T.tur(a) + " ile " + T.tur(b) + " karsilastirilamaz");
+    throw AxsHata(T.tur(a) + " ile " + T.tur(b) + " karsilastirilamaz");
   }
   T.kucuk = function (a, b) { var p = sirala_cifti(a, b); return p[0] < p[1]; };
   T.buyuk = function (a, b) { var p = sirala_cifti(a, b); return p[0] > p[1]; };
@@ -170,16 +170,16 @@
   // ------------------------------------------------------------------ erisim
   T.dizin = function (nesne, anahtar) {
     if (nesne === null || nesne === undefined) {
-      throw TonHata("null icinde sira ile erisim yok");
+      throw AxsHata("null icinde sira ile erisim yok");
     }
     if (typeof nesne === "string" || Array.isArray(nesne)) {
       if (!sayi_mi(anahtar)) {
-        throw TonHata("Sira numarasi sayi olmali, " + T.tur(anahtar) + " verildi");
+        throw AxsHata("Sira numarasi sayi olmali, " + T.tur(anahtar) + " verildi");
       }
       var i = Math.floor(anahtar);
       if (i < 0) i += nesne.length;
       if (i < 0 || i >= nesne.length) {
-        throw TonHata(T.tur(nesne) + " icinde " + T.metin(anahtar) + ". sira yok (uzunluk " +
+        throw AxsHata(T.tur(nesne) + " icinde " + T.metin(anahtar) + ". sira yok (uzunluk " +
                       nesne.length + ")");
       }
       return nesne[i];
@@ -188,7 +188,7 @@
       var k = typeof anahtar === "string" ? anahtar : T.metin(anahtar);
       return Object.prototype.hasOwnProperty.call(nesne, k) ? nesne[k] : null;
     }
-    throw TonHata(T.tur(nesne) + " icinde sira ile erisim yok");
+    throw AxsHata(T.tur(nesne) + " icinde sira ile erisim yok");
   };
 
   T.ata_dizin = function (nesne, anahtar, deger) {
@@ -196,7 +196,7 @@
       var i = Math.floor(anahtar);
       if (i < 0) i += nesne.length;
       if (i < 0 || i >= nesne.length) {
-        throw TonHata("Liste disinda sira: " + T.metin(anahtar));
+        throw AxsHata("Liste disinda sira: " + T.metin(anahtar));
       }
       nesne[i] = deger;
       return deger;
@@ -205,7 +205,7 @@
       nesne[typeof anahtar === "string" ? anahtar : T.metin(anahtar)] = deger;
       return deger;
     }
-    throw TonHata(T.tur(nesne) + " icine deger konulamaz");
+    throw AxsHata(T.tur(nesne) + " icine deger konulamaz");
   };
 
   T.uye = function (nesne, ad) {
@@ -213,7 +213,7 @@
     // Kutuphane/baglanti nesneleri: kendi uyeleri hazir yontemleri golgeler
     if (nesne && nesne.__alan) {
       if (Object.prototype.hasOwnProperty.call(nesne, ad)) return nesne[ad];
-      throw TonHata("baglanti uzerinde '" + ad + "' yok");
+      throw AxsHata("baglanti uzerinde '" + ad + "' yok");
     }
     // Haritada kendi alani varsa o kazanir (veri, hazir yontemi golgeler)
     if (harita_mi(nesne) && Object.prototype.hasOwnProperty.call(nesne, ad)) {
@@ -226,12 +226,12 @@
       if (ad === "bitti") return nesne.bitti;
       if (ad === "sonuc") return nesne.sozu;
     }
-    throw TonHata(t + " uzerinde '" + ad + "' yok");
+    throw AxsHata(t + " uzerinde '" + ad + "' yok");
   };
 
   T.ata_uye = function (nesne, ad, deger) {
     if (harita_mi(nesne)) { nesne[ad] = deger; return deger; }
-    throw TonHata(T.tur(nesne) + " uzerine '" + ad + "' yazilamaz");
+    throw AxsHata(T.tur(nesne) + " uzerine '" + ad + "' yazilamaz");
   };
 
   function bagla(fn, nesne, ad) {
@@ -247,13 +247,13 @@
   // ------------------------------------------------------------------ cagri
   T.h = function (ad) {
     var f = HAZIR[ad];
-    if (!f) throw TonHata("'" + ad + "' adinda bir is yok (tarayici surumu)");
+    if (!f) throw AxsHata("'" + ad + "' adinda bir is yok (tarayici surumu)");
     return f;
   };
 
   T.cagir = async function (hedef, args, isimli) {
     if (typeof hedef !== "function") {
-      throw TonHata(T.tur(hedef) + " cagrilamaz");
+      throw AxsHata(T.tur(hedef) + " cagrilamaz");
     }
     args = args || [];
     if (isimli) {
@@ -262,7 +262,7 @@
       for (var ad in isimli) {
         var yer = adlar.indexOf(ad);
         if (yer < 0) {
-          throw TonHata("'" + (hedef.__ad || "is") + "' boyle bir deger almiyor: " + ad);
+          throw AxsHata("'" + (hedef.__ad || "is") + "' boyle bir deger almiyor: " + ad);
         }
         while (yeni.length < yer) yeni.push(undefined);
         yeni[yer] = isimli[ad];
@@ -270,7 +270,7 @@
       args = yeni;
     }
     if (hedef.__is && args.length > (hedef.__adlar || []).length) {
-      throw TonHata("'" + hedef.__ad + "' en fazla " + hedef.__adlar.length +
+      throw AxsHata("'" + hedef.__ad + "' en fazla " + hedef.__adlar.length +
                     " deger alir, " + args.length + " verildi");
     }
     return await hedef.apply(null, args);
@@ -296,12 +296,12 @@
     if (harita_mi(kaynak)) {
       return Object.keys(kaynak).map(function (k) { return [k, kaynak[k]]; });
     }
-    throw TonHata("'for' listede, haritada ya da metinde gezer; " + T.tur(kaynak) +
+    throw AxsHata("'for' listede, haritada ya da metinde gezer; " + T.tur(kaynak) +
                   " verildi");
   };
 
   T.tekrar = function (n) {
-    if (!sayi_mi(n)) throw TonHata("'repeat' bir sayi ister, " + T.tur(n) + " verildi");
+    if (!sayi_mi(n)) throw AxsHata("'repeat' bir sayi ister, " + T.tur(n) + " verildi");
     return Math.floor(n);
   };
 
@@ -332,13 +332,13 @@
     if (v === null || v === undefined) return 0;
     if (typeof v === "string" || Array.isArray(v)) return v.length;
     if (harita_mi(v)) return Object.keys(v).length;
-    throw TonHata(T.tur(v) + " icin uzunluk yok");
+    throw AxsHata(T.tur(v) + " icin uzunluk yok");
   }
   function liste_iste(v, ad) {
     if (Array.isArray(v)) return v;
     if (typeof v === "string") return v.split("");
     if (harita_mi(v)) return Object.keys(v);
-    throw TonHata(ad + " bir liste ister, " + T.tur(v) + " verildi");
+    throw AxsHata(ad + " bir liste ister, " + T.tur(v) + " verildi");
   }
 
   // ------------------------------------------------------------------ yazdirma
@@ -394,7 +394,7 @@
       if (ham !== "" && !isNaN(Number(ham))) return Number(ham);
     }
     if (varsayilan !== undefined && varsayilan !== null) return varsayilan;
-    throw TonHata("'" + T.metin(v) + "' sayiya cevrilemedi");
+    throw AxsHata("'" + T.metin(v) + "' sayiya cevrilemedi");
   });
 
   kaydet(["int", "tam"], ["deger"], function (v) {
@@ -424,15 +424,15 @@
   });
   kaydet(["is_empty", "bos_mu"], ["deger"], function (v) { return !T.dogru_mu(v); });
   kaydet(["error", "hata"], ["mesaj"], function (mesaj) {
-    throw TonHata(T.metin(mesaj === undefined ? "Hata" : mesaj));
+    throw AxsHata(T.metin(mesaj === undefined ? "Hata" : mesaj));
   });
-  kaydet(["exit", "cik"], ["kod"], function () { throw TonHata("__ton_cik__"); });
+  kaydet(["exit", "cik"], ["kod"], function () { throw AxsHata("__axs_cik__"); });
   kaydet(["show", "gosterimi"], ["deger"], function (v) { return T.gosterim(v); });
 
   kaydet(["json", "jsonoku"], ["metin"], function (ham) {
     if (typeof ham !== "string") return ham;
     try { return JSON.parse(ham); } catch (e) {
-      throw TonHata("JSON okunamadi: " + e.message);
+      throw AxsHata("JSON okunamadi: " + e.message);
     }
   });
   hem(["liste", "harita", "metin"], ["tojson", "jsonyaz"], ["deger", "guzel"],
@@ -462,7 +462,7 @@
   });
   kaydet(["pick", "sec_rastgele"], ["liste"], function (l) {
     var ogeler = liste_iste(l, "sec_rastgele()");
-    if (!ogeler.length) throw TonHata("Bos listeden secim yapilamaz");
+    if (!ogeler.length) throw AxsHata("Bos listeden secim yapilamaz");
     return ogeler[Math.floor(Math.random() * ogeler.length)];
   });
   kaydet(["shuffle", "karistir"], ["liste"], function (l) {
@@ -561,7 +561,7 @@
 
   // ------------------------------------------------------------------ liste
   hem(["liste"], ["push", "ekle"], ["liste", "deger"], function (l) {
-    if (!Array.isArray(l)) throw TonHata("ekle() bir liste ister, " + T.tur(l) + " verildi");
+    if (!Array.isArray(l)) throw AxsHata("ekle() bir liste ister, " + T.tur(l) + " verildi");
     for (var i = 1; i < arguments.length; i++) l.push(arguments[i]);
     return l;
   });
@@ -627,11 +627,11 @@
   }
 
   hem(["harita"], ["keys", "anahtarlar"], ["harita"], function (h) {
-    if (!harita_mi(h)) throw TonHata("anahtarlar() bir harita ister");
+    if (!harita_mi(h)) throw AxsHata("anahtarlar() bir harita ister");
     return Object.keys(h);
   });
   hem(["harita"], ["values", "degerler"], ["harita"], function (h) {
-    if (!harita_mi(h)) throw TonHata("degerler() bir harita ister");
+    if (!harita_mi(h)) throw AxsHata("degerler() bir harita ister");
     return Object.keys(h).map(function (k) { return h[k]; });
   });
   hem(["harita"], ["items", "ciftler"], ["harita"], function (h) {
@@ -664,7 +664,7 @@
   kaydet(["range", "aralik"], ["bas", "son", "adim"], function (bas, son, adim) {
     if (son === undefined || son === null) { son = bas; bas = 1; }
     adim = adim === undefined || adim === null ? 1 : Math.floor(adim);
-    if (adim === 0) throw TonHata("aralik adimi 0 olamaz");
+    if (adim === 0) throw AxsHata("aralik adimi 0 olamaz");
     var c = [];
     if (adim > 0) { for (var i = bas; i <= son; i += adim) c.push(i); }
     else { for (var j = bas; j >= son; j += adim) c.push(j); }
@@ -798,7 +798,7 @@
   kaydet(["floor", "asagi"], ["sayi"], function (x) { return Math.floor(x); });
   kaydet(["ceil", "yukari"], ["sayi"], function (x) { return Math.ceil(x); });
   kaydet(["sqrt", "karekok"], ["sayi"], function (x) {
-    if (x < 0) throw TonHata("Negatif sayinin karekoku alinamaz");
+    if (x < 0) throw AxsHata("Negatif sayinin karekoku alinamaz");
     return Math.sqrt(x);
   });
   kaydet(["pow", "us"], ["sayi", "us"], function (x, y) { return Math.pow(x, y); });
@@ -825,7 +825,7 @@
   T._m = m;
   T._harita_mi = harita_mi;
   T._sayi_mi = sayi_mi;
-  T._TonHata = TonHata;
+  T._AxsHata = AxsHata;
 })(typeof globalThis !== "undefined" ? globalThis : this);
 
 /* ---------------------------------------------------------------------------
@@ -836,12 +836,12 @@
 
   var T = global.AXS;
   var kaydet = T._kaydet, hem = T._hem, m = T._m;
-  var harita_mi = T._harita_mi, TonHata = T._TonHata;
+  var harita_mi = T._harita_mi, AxsHata = T._AxsHata;
   var liste_iste = T._liste_iste;
 
   function belge() {
     if (typeof document === "undefined") {
-      throw TonHata("Bu is sadece tarayicida calisir (sayfa yok)");
+      throw AxsHata("Bu is sadece tarayicida calisir (sayfa yok)");
     }
     return document;
   }
@@ -879,7 +879,7 @@
     try {
       cevap = await fetch(adres, ayar);
     } catch (e) {
-      throw TonHata("Baglanti kurulamadi (" + adres + "): " + (e.message || e));
+      throw AxsHata("Baglanti kurulamadi (" + adres + "): " + (e.message || e));
     }
     var ham = await cevap.text();
     var govde = ham;
@@ -897,7 +897,7 @@
     if (cevap.basarili) return cevap.veri;
     var ozet = T.metin(cevap.veri);
     if (ozet.length > 200) ozet = ozet.slice(0, 200) + "...";
-    throw TonHata("Istek basarisiz (" + cevap.durum + ") " + adres + ": " + ozet);
+    throw AxsHata("Istek basarisiz (" + cevap.durum + ") " + adres + ": " + ozet);
   }
 
   kaydet(["get", "getir"], ["adres", "parametreler", "basliklar"],
@@ -922,7 +922,7 @@
   /* connect(wss://...) tarayicida da calisir: cekirdekteki ile ayni arayuz. */
   function soket_ac(adres) {
     var WS = global.WebSocket;
-    if (!WS) throw TonHata("Bu ortamda WebSocket yok");
+    if (!WS) throw AxsHata("Bu ortamda WebSocket yok");
     var ws = new WS(m(adres));
     var kuyruk = [];        // gelen mesajlar
     var bekleyenler = [];   // al() cagrilari
@@ -931,7 +931,7 @@
     var acilma = new Promise(function (tamam, hatali) {
       ws.onopen = function () { tamam(true); };
       ws.onerror = function () {
-        if (!kapandi) hatali(TonHata("Baglanti kurulamadi: " + m(adres)));
+        if (!kapandi) hatali(AxsHata("Baglanti kurulamadi: " + m(adres)));
       };
     });
 
@@ -978,7 +978,7 @@
 
     async function yolla(mesaj) {
       await acilma;
-      if (ws.readyState !== 1) throw TonHata("Baglanti kapali");
+      if (ws.readyState !== 1) throw AxsHata("Baglanti kapali");
       ws.send((harita_mi(mesaj) || Array.isArray(mesaj))
         ? JSON.stringify(mesaj) : T.metin(mesaj));
       return true;
@@ -987,7 +987,7 @@
     async function al(zaman_asimi) {
       await acilma;
       if (kuyruk.length) return kuyruk.shift();
-      if (kapandi) throw TonHata("Baglanti kapandi (" + kapandi + ")");
+      if (kapandi) throw AxsHata("Baglanti kapandi (" + kapandi + ")");
       return await new Promise(function (tamam) {
         var bitti = false;
         function ver(v) { if (!bitti) { bitti = true; tamam(v); } }
@@ -1029,7 +1029,7 @@
     if (a.indexOf("ws://") === 0 || a.indexOf("wss://") === 0) {
       return soket_ac(a);
     }
-    throw TonHata("Tarayicida connect() sadece ws:// ve wss:// adresleri acar; "
+    throw AxsHata("Tarayicida connect() sadece ws:// ve wss:// adresleri acar; "
                   + "HTTP icin get()/post() kullan");
   });
 
@@ -1050,7 +1050,7 @@
            if (typeof hedef === "string") {
              return gorev_yap(T.cagir(T.h("get"), [hedef].concat(args)), hedef);
            }
-           throw TonHata("asyn() bir is ya da adres ister, " + T.tur(hedef) + " verildi");
+           throw AxsHata("asyn() bir is ya da adres ister, " + T.tur(hedef) + " verildi");
          });
 
   kaydet(["wait", "bekle"], ["hedef"], async function (hedef) {
@@ -1066,7 +1066,7 @@
       return c;
     }
     if (typeof hedef.then === "function") return await hedef;
-    throw TonHata("bekle() sayi ya da gorev ister, " + T.tur(hedef) + " verildi");
+    throw AxsHata("bekle() sayi ya da gorev ister, " + T.tur(hedef) + " verildi");
   });
 
   kaydet(["waitall", "hepsini_bekle"], ["gorevler"], async function (gorevler) {
@@ -1081,13 +1081,13 @@
     return await Promise.all(liste_iste(isler, "paralel()").map(function (o) {
       if (typeof o === "function") return T.cagir(o, args);
       if (typeof o === "string") return T.cagir(T.h("get"), [o]);
-      throw TonHata("paralel() listesinde is ya da adres olmali");
+      throw AxsHata("paralel() listesinde is ya da adres olmali");
     }));
   });
 
   kaydet(["after", "sonra", "zamanla", "timer"], ["saniye", "is"],
          function (saniye, is_) {
-           if (typeof is_ !== "function") throw TonHata("sonra() bir is ister");
+           if (typeof is_ !== "function") throw AxsHata("sonra() bir is ister");
            return gorev_yap(new Promise(function (c, r) {
              setTimeout(function () { T.cagir(is_, []).then(c, r); }, saniye * 1000);
            }), "sonra");
@@ -1111,7 +1111,7 @@
            var zamanlayici;
            var sure = new Promise(function (_, r) {
              zamanlayici = setTimeout(function () {
-               r(TonHata("Islem " + T.metin(saniye) + " saniyede bitmedi"));
+               r(AxsHata("Islem " + T.metin(saniye) + " saniyede bitmedi"));
              }, saniye * 1000);
            });
            try {
@@ -1131,7 +1131,7 @@
     if (!ad) return null;
     ad = AI_TAKMA[ad] || ad;
     if (AI_SAGLAYICILAR.indexOf(ad) < 0) {
-      throw TonHata("'" + ad + "' diye bir yapay zeka saglayicisi yok. Secenekler: " +
+      throw AxsHata("'" + ad + "' diye bir yapay zeka saglayicisi yok. Secenekler: " +
                     AI_SAGLAYICILAR.join(", "));
     }
     return ad;
@@ -1166,7 +1166,7 @@
            if (!c.basarili) {
              var ayrinti = c.veri;
              if (harita_mi(ayrinti)) ayrinti = ayrinti.hata || ayrinti.error || ayrinti;
-             throw TonHata("Yapay zeka hatasi (" + c.durum + "): " + T.metin(ayrinti));
+             throw AxsHata("Yapay zeka hatasi (" + c.durum + "): " + T.metin(ayrinti));
            }
            if (harita_mi(c.veri)) return T.metin(c.veri.cevap || c.veri.metin || c.veri);
            return T.metin(c.veri);
@@ -1290,7 +1290,7 @@
     if (secici === null || secici === undefined) return null;
     if (typeof secici === "object" && secici.nodeType) return secici;
     var e = belge().querySelector(m(secici));
-    if (!e) throw TonHata("Sayfada '" + m(secici) + "' bulunamadi");
+    if (!e) throw AxsHata("Sayfada '" + m(secici) + "' bulunamadi");
     return e;
   }
 
@@ -1462,37 +1462,37 @@
   });
 
   kaydet(["sakla", "store"], ["ad", "deger"], function (ad, deger) {
-    try { global.localStorage.setItem("ton:" + m(ad), JSON.stringify(deger)); }
+    try { global.localStorage.setItem("axs:" + m(ad), JSON.stringify(deger)); }
     catch (e) { return false; }
     return true;
   });
   kaydet(["saklanan", "stored"], ["ad", "varsayilan"], function (ad, varsayilan) {
     try {
-      var ham = global.localStorage.getItem("ton:" + m(ad));
+      var ham = global.localStorage.getItem("axs:" + m(ad));
       if (ham === null) return varsayilan === undefined ? null : varsayilan;
       return JSON.parse(ham);
     } catch (e) { return varsayilan === undefined ? null : varsayilan; }
   });
   kaydet(["sakli_sil", "store_remove"], ["ad"], function (ad) {
-    try { global.localStorage.removeItem("ton:" + m(ad)); } catch (e) { return false; }
+    try { global.localStorage.removeItem("axs:" + m(ad)); } catch (e) { return false; }
     return true;
   });
 
 
   // ------------------------------------------------------------------ eksik cekirdek isleri
   hem(["gorev"], ["done", "bitti_mi"], ["gorev"], function (g) {
-    if (!g || !g.__gorev) throw TonHata("bitti_mi() bir gorev ister");
+    if (!g || !g.__gorev) throw AxsHata("bitti_mi() bir gorev ister");
     return g.bitti;
   });
   hem(["gorev"], ["result", "sonucu"], ["gorev"], async function (g) {
-    if (!g || !g.__gorev) throw TonHata("sonucu() bir gorev ister");
+    if (!g || !g.__gorev) throw AxsHata("sonucu() bir gorev ister");
     return await g.sozu;
   });
 
   kaydet(["call", "cagir"], ["hedef", "argumanlar"], async function (hedef, argumanlar) {
     if (typeof hedef === "string") {
       var bulunan = T._HAZIR[hedef];
-      if (!bulunan) throw TonHata("'" + hedef + "' adinda bir is yok");
+      if (!bulunan) throw AxsHata("'" + hedef + "' adinda bir is yok");
       hedef = bulunan;
     }
     return await T.cagir(hedef, liste_iste(argumanlar || [], "cagir()"));
@@ -1542,7 +1542,7 @@
 
   // ------------------------------------------------------------------ baslatici
   function hata_goster(e) {
-    if (e && e.mesaj === "__ton_cik__") return;
+    if (e && e.mesaj === "__axs_cik__") return;
     var mesaj = T.hata_metni(e);
     if (typeof console !== "undefined") console.error("Axs hatasi: " + mesaj);
     if (typeof document !== "undefined") {
@@ -1571,7 +1571,7 @@
     var betikler = document.querySelectorAll('script[type="text/axs"][src]');
     Array.prototype.forEach.call(betikler, function (b) {
       var s = document.createElement("script");
-      s.src = b.src.replace(/\.(ton|tn|nyl|tnl)$/, ".axs.js");
+      s.src = b.src.replace(/\.(axs|nyl)$/, ".axs.js");
       document.head.appendChild(s);
     });
   };
