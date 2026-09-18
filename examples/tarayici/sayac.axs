@@ -5,8 +5,8 @@
 sayi = saklanan("sayi", 0)
 
 func goster()
-  yaz_metin("#sayi", %sayi%)
-  sakla("sayi", %sayi%)
+  yaz_metin("#sayi", sayi)
+  sakla("sayi", sayi)
 end
 
 func arttir(olay)
@@ -30,4 +30,4 @@ tikla("#azalt", azalt)
 tikla("#sifirla", sifirla)
 goster()
 
-print: Sayac hazir. Baslangic degeri: %sayi%
+print: Sayac hazir. Baslangic degeri: sayi;

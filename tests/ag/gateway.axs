@@ -7,17 +7,17 @@ jubbio.ag_ayarla(adres: env("SAHTE_GATEWAY"), kayit: false)
 sayac = 0
 
 func hazir(veri)
-  print: HAZIR: %veri.user.username% (oturum %veri.session_id%)
+  print: HAZIR: veri.user.username; (oturum veri.session_id;)
 end
 
 func mesaj(m)
   sayac += 1
-  print: MESAJ %sayac%: %m.content% <- %m.author.username% (kanal %m.channel_id%)
+  print: MESAJ sayac;: m.content; <- m.author.username; (kanal m.channel_id;)
 end
 
 func katildi(veri)
-  print: KATILDI: %veri.user.username%
-  print: toplam %sayac% mesaj alindi, bot duruyor
+  print: KATILDI: veri.user.username;
+  print: toplam sayac; mesaj alindi, bot duruyor
   jubbio.dur()
 end
 
@@ -27,5 +27,5 @@ jubbio.dinle("uye_katildi", katildi)
 
 jubbio.calistir(["sunucular", "mesajlar", "icerik"], yeniden_baglan: false)
 
-print: ben: %(jubbio.ben().username)%
+print: ben: (jubbio.ben().username);
 print: bitti

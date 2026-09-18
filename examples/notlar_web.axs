@@ -4,10 +4,10 @@
 use web
 
 db = connect("notlar.db")
-%db%.run("create table if not exists notlar (metin text)")
+db.run("create table if not exists notlar (metin text)")
 
 func anasayfa(istek)
-  satirlar = %db%.all("select rowid as no, metin from notlar order by rowid desc")
+  satirlar = db.all("select rowid as no, metin from notlar order by rowid desc")
   govde = """
     <h1>Notlarım</h1>
     <form action="/ekle" method="post">
@@ -15,19 +15,19 @@ func anasayfa(istek)
       <button>Ekle</button>
     </form>
   """
-  return web.html(baslik: "Notlar", govde: %govde% + web.table(%satirlar%))
+  return web.html(baslik: "Notlar", govde: govde + web.table(satirlar))
 end
 
 func ekle(istek)
-  metin = %istek.veri.metin%
-  if %metin%
-    %db%.run("insert into notlar values (?)", [%metin%])
+  metin = istek.veri.metin
+  if metin
+    db.run("insert into notlar values (?)", [metin])
   end
   return web.redirect("/")
 end
 
 func api(istek)
-  return %db%.all("select rowid as no, metin from notlar")
+  return db.all("select rowid as no, metin from notlar")
 end
 
 web.page("/", anasayfa)

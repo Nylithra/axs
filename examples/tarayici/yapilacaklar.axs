@@ -3,11 +3,11 @@
 
 func ciz(ogeler)
   satirlar = ""
-  for oge in %ogeler%
-    satirlar = %satirlar% + "<li>" + %oge% + "</li>"
+  for oge in ogeler
+    satirlar = satirlar + "<li>" + oge + "</li>"
   end
-  yaz_ic("#liste", %satirlar%)
-  yaz_metin("#durum", "Toplam " + len(%ogeler%) + " is")
+  yaz_ic("#liste", satirlar)
+  yaz_metin("#durum", "Toplam " + len(ogeler) + " is")
 end
 
 func yenile()
@@ -16,12 +16,12 @@ end
 
 func gonder(olay)
   metin = deger("#metin")
-  if %metin% == ""
+  if metin == ""
     return null
   end
-  ogeler = post("/api/ekle", {metin: %metin%})
+  ogeler = post("/api/ekle", {metin: metin})
   deger("#metin", "")
-  ciz(%ogeler%)
+  ciz(ogeler)
 end
 
 gonderim("#form", gonder)

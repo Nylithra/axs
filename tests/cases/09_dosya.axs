@@ -8,9 +8,9 @@ print(files("_gecici"))
 print(size("_gecici/not.txt") > 0)
 
 veri = {ad: "Nyl", diller: ["ton", "tnl"]}
-save("_gecici/veri.json", tojson(%veri%))
+save("_gecici/veri.json", tojson(veri))
 geri = json(read("_gecici/veri.json"))
-print(%geri.ad%, %geri.diller[1]%)
+print(geri.ad, geri.diller[1])
 print(tojson([1, 2]))
 
 delete("_gecici")

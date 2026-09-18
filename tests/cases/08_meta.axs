@@ -1,5 +1,5 @@
 meta('gizli = 7')
-print: %gizli%
+print: gizli;
 
 meta('''
 func ikikat(x)
@@ -19,7 +19,7 @@ print(template('Merhaba %ad%, %(%yas% + 1)% yasina girdin', {ad: "Nyl", yas: 19}
 print(params(uckat))
 
 kodlar = ["a = 1", "b = 2"]
-for k in %kodlar%
-  meta(%k%)
+for k in kodlar
+  meta(k)
 end
-print(%a% + %b%)
+print(a + b)

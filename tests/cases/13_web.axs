@@ -5,11 +5,11 @@ func anasayfa(istek)
 end
 
 func kullanici(istek)
-  return {ad: %istek.parametreler.ad%, yol: %istek.yol%}
+  return {ad: istek.parametreler.ad, yol: istek.yol}
 end
 
 func yanki(istek)
-  return web.json({alinan: %istek.veri%, yontem: %istek.yontem%})
+  return web.json({alinan: istek.veri, yontem: istek.yontem})
 end
 
 web.page("/", anasayfa)

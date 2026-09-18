@@ -7,15 +7,15 @@ use web
 notlar = ["TON'u dene", "axsweb ile site yap"]
 
 func liste(istek)
-  return %notlar%
+  return notlar
 end
 
 func yeni_not(istek)
-  metin = %istek.veri.metin%
-  if %metin%
-    ekle(%notlar%, %metin%)
+  metin = istek.veri.metin
+  if metin
+    ekle(notlar, metin)
   end
-  return %notlar%
+  return notlar
 end
 
 web.api("/api/notlar", liste)

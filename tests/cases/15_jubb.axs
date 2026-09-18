@@ -5,8 +5,8 @@ use web
 use jubbio
 
 func yanki(istek)
-  return {yontem: %istek.yontem%, yol: %istek.yol%,
-          sorgu: %istek.sorgu%, govde: %istek.govde%}
+  return {yontem: istek.yontem, yol: istek.yol,
+          sorgu: istek.sorgu, govde: istek.govde}
 end
 
 func yetkisiz(istek)
@@ -22,14 +22,14 @@ jubbio.giris("GIZLI_TOKEN", "UYG1")
 jubbio.ayarla(temel: "http://127.0.0.1:8155/yanki")
 
 func g(cevap)
-  satir = %cevap.yontem% + " " + %cevap.yol%
-  if len(%cevap.sorgu%) > 0
-    satir = %satir% + " ?" + tojson(%cevap.sorgu%)
+  satir = cevap.yontem + " " + cevap.yol
+  if len(cevap.sorgu) > 0
+    satir = satir + " ?" + tojson(cevap.sorgu)
   end
-  if %cevap.govde% != ""
-    satir = %satir% + " " + %cevap.govde%
+  if cevap.govde != ""
+    satir = satir + " " + cevap.govde
   end
-  print: %satir%
+  print: satir;
 end
 
 print: --- mesajlar ---
@@ -54,7 +54,7 @@ g(jubbio.yasak_kaldir(7, 42))
 g(jubbio.susturma_kaldir(7, 42, "affedildi"))
 # sustur: bitis zamani her calisista degisir, sadece alan adlarina bakiyoruz
 sonuc = jubbio.sustur(7, 42, 600, "sakin ol")
-print: %sonuc.yontem% %sonuc.yol% alanlar=%(join(keys(json(%sonuc.govde%)), ","))%
+print: sonuc.yontem; sonuc.yol; alanlar=(join(keys(json(sonuc.govde)), ","));
 g(jubbio.rol_ver(7, 42, 5))
 g(jubbio.rol_al(7, 42, 5))
 g(jubbio.uye_duzenle(7, 42, {nick: "yeni ad"}))
@@ -77,25 +77,25 @@ g(jubbio.komut_sil(11, 7))
 
 print: --- etkilesim ---
 etkilesim = {id: 55, token: "TKN"}
-g(jubbio.cevapla(%etkilesim%, "cevap"))
-g(jubbio.cevapla(%etkilesim%, "gizli cevap", gizli: true))
-g(jubbio.dusun(%etkilesim%))
-g(jubbio.cevap_duzenle(%etkilesim%, "duzeltildi"))
-g(jubbio.ek_cevap(%etkilesim%, "ek"))
+g(jubbio.cevapla(etkilesim, "cevap"))
+g(jubbio.cevapla(etkilesim, "gizli cevap", gizli: true))
+g(jubbio.dusun(etkilesim))
+g(jubbio.cevap_duzenle(etkilesim, "duzeltildi"))
+g(jubbio.ek_cevap(etkilesim, "ek"))
 
 print: --- hatalar ---
 jubbio.ayarla(temel: "http://127.0.0.1:8155/kizgin")
 try
   jubbio.yolla(7, 9, "olmaz")
 catch m
-  print: %m%
+  print: m;
 end
 
 jubbio.giris("")
 try
   jubbio.sunucu(7)
 catch m
-  print: %m%
+  print: m;
 end
 
 web.stop()

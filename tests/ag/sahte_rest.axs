@@ -2,14 +2,14 @@
 use web
 
 func yanki(istek)
-  print: REST %istek.yontem% %istek.yol% %istek.govde%
-  if ends(%istek.yol%, "/channels")
-    if %istek.yontem% == "GET"
+  print: REST istek.yontem; istek.yol; istek.govde;
+  if ends(istek.yol, "/channels")
+    if istek.yontem == "GET"
       return [{id: 100, name: "genel", type: 0}, {id: 200, name: "DESTEK", type: 4}]
     end
     return {id: 555, name: "destek-1", type: 0}
   end
-  if ends(%istek.yol%, "/roles")
+  if ends(istek.yol, "/roles")
     return [{id: 300, name: "@everyone"}, {id: 301, name: "Yetkili"}]
   end
   return {ok: true, id: 999}

@@ -17,27 +17,27 @@ KOMUTLAR = [
 ]
 
 func hazir(veri)
-  print: HAZIR: %veri.user.username% / uygulama %(jubbio.ayar().uygulama)%
-  jubbio.komutlari_ayarla(%KOMUTLAR%, 7)
-  print: %(len(%KOMUTLAR%))% komut kaydedildi
+  print: HAZIR: veri.user.username; / uygulama (jubbio.ayar().uygulama);
+  jubbio.komutlari_ayarla(KOMUTLAR, 7)
+  print: (len(KOMUTLAR)); komut kaydedildi
 end
 
 func slash(e)
-  ad = jubbio.komut_adi(%e%)
-  kisi = jubbio.kim(%e%)
-  print: /%ad% <- %kisi.username%
+  ad = jubbio.komut_adi(e)
+  kisi = jubbio.kim(e)
+  print: /%ad% <- kisi.username;
 
-  if %ad% == "selam"
-    jubbio.cevapla(%e%, "Selam " + jubbio.bahset(%kisi.id%) + "!")
-  elif %ad% == "topla"
-    bir = jubbio.secenek(%e%, "bir", 0)
-    iki = jubbio.secenek(%e%, "iki", 0)
-    jubbio.cevapla(%e%, %bir% + " + " + %iki% + " = " + (%bir% + %iki%))
-  elif %ad% == "yanki"
-    jubbio.cevapla(%e%, {baslik: "Yanki", aciklama: jubbio.secenek(%e%, "metin", ""),
+  if ad == "selam"
+    jubbio.cevapla(e, "Selam " + jubbio.bahset(kisi.id) + "!")
+  elif ad == "topla"
+    bir = jubbio.secenek(e, "bir", 0)
+    iki = jubbio.secenek(e, "iki", 0)
+    jubbio.cevapla(e, bir + " + " + iki + " = " + (bir + iki))
+  elif ad == "yanki"
+    jubbio.cevapla(e, {baslik: "Yanki", aciklama: jubbio.secenek(e, "metin", ""),
                        renk: "#2f6fed"})
   else
-    jubbio.cevapla(%e%, "bilmiyorum", gizli: true)
+    jubbio.cevapla(e, "bilmiyorum", gizli: true)
   end
   return null
 end

@@ -13,12 +13,12 @@ func anasayfa(istek)
       <button>Gonder</button>
     </form>
   """
-  return web.html(baslik: "TON Web", govde: %govde%)
+  return web.html(baslik: "TON Web", govde: govde)
 end
 
 func selam(istek)
-  ad = %istek.parametreler.ad%
-  return web.html(baslik: "Selam", govde: "<h1>Selam " + web.escape(%ad%) + "</h1>")
+  ad = istek.parametreler.ad
+  return web.html(baslik: "Selam", govde: "<h1>Selam " + web.escape(ad) + "</h1>")
 end
 
 func saat(istek)
@@ -26,8 +26,8 @@ func saat(istek)
 end
 
 func mesaj(istek)
-  gelen = %istek.veri.mesaj%
-  return web.html(baslik: "Alindi", govde: "<h1>Aldim</h1><p>" + web.escape(%gelen%) + "</p>")
+  gelen = istek.veri.mesaj
+  return web.html(baslik: "Alindi", govde: "<h1>Aldim</h1><p>" + web.escape(gelen) + "</p>")
 end
 
 web.page("/", anasayfa)
